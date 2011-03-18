@@ -131,9 +131,9 @@ index.html
 Settings
 =========================================
 `OBJECT_PERMISSION_MODIFY_FUNCTION`
-:	set the name of function when object is saved for modify object permission for the object.
-	the default value is `modify_object_permission`
+: set the name of function when object is saved for modify object permission for the object.
+the default value is `modify_object_permission`
 
 `OBJECT_PERMISSION_MODIFY_M2M_FUNCTION`
-:	set the name of function when object's ManyToMany relation is updated for modify object permission
-	for the object. the default value is `modify_object_permission_m2m`
+: set the name of function when object's ManyToMany relation is updated for modify object permission
+for the object. the default value is `modify_object_permission_m2m`
