@@ -1,33 +1,29 @@
-Introduction
-===========================================
-This application supply Django's object permission feature
+``django-object-permissiono`` apply object permission feature to Django models
 
 Install
 ===========================================
+::
 
 	sudo pip install django-object-permission
 
-or
+or::
 
-	git clone git://github.com/alisue/django-object-permission.git
-	sudo pip install django-object-permission/
-
-or download repository and copy it to somewhere in PYTHON_PATH
+    sudo pip install git+git://github.com/lambdalisue/django-object-permission.git#egg=django-object-permission
 
 
 How to Use
 ==========================================
 
-1. Append `object_permission` to `INSTALLED_APPS`
-2. run `manage.py syncdb`
-3. Add `modify_object_permission(mediator, created)` and `modify_object_permission_m2m(mediator, sender, model, pk_set, removed)` to the target model at `models.py`
-4. Use `object_permission.decorators.permission_required(parm, queryset)` to filtering view or whatever
+1.  Append ``object_permission`` to ``INSTALLED_APPS``
+2.  run ``manage.py syncdb``
+3.  Add ``modify_object_permission(mediator, created)`` and ``modify_object_permission_m2m(mediator, sender, model, pk_set, removed)`` to the target model at ``models.py``
+4.  Use ``object_permission.decorators.permission_required(parm, queryset)`` to filtering view or whatever
 
 
-Example mini `blog` app
+Example mini blog app
 =========================================
 
-models.py
+``models.py``::
 	
 	from django.db import models
 	from django.contrib.auth.models import User
@@ -70,7 +66,7 @@ models.py
 		def modify_object_permission_m2m(self, mediator, sender, model, pk_set, removed):
 			pass
 
-views.py
+``views.py``::
 
 	from django.views.generic import list_detail
 	from django.views.generic import create_update
@@ -98,7 +94,7 @@ views.py
 	def delete_object(request, object_id, *args, **kwargs):
 		return create_update.delete_object(request, object_id=object_id, *args, **kwargs)
 
-index.html
+``index.html``::
 
 	<html>
 	<head>
@@ -130,10 +126,10 @@ index.html
 
 Settings
 =========================================
-`OBJECT_PERMISSION_MODIFY_FUNCTION`
-: set the name of function when object is saved for modify object permission for the object.
-the default value is `modify_object_permission`
+``OBJECT_PERMISSION_MODIFY_FUNCTION``
+    set the name of function when object is saved for modify object permission for the object.
+    the default value is ``modify_object_permission``
 
-`OBJECT_PERMISSION_MODIFY_M2M_FUNCTION`
-: set the name of function when object's ManyToMany relation is updated for modify object permission
-for the object. the default value is `modify_object_permission_m2m`
+``OBJECT_PERMISSION_MODIFY_M2M_FUNCTION``
+    set the name of function when object's ManyToMany relation is updated for modify object permission
+    for the object. the default value is ``modify_object_permission_m2m``
