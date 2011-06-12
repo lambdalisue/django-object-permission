@@ -10,8 +10,8 @@ settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION = getattr(settings, 'OBJECT_PERMI
 from mediators import ObjectPermissionMediator
 
 # Regist templatetags for ObjectPermission
-from django.template import add_to_builtins
-add_to_builtins('object_permission.templatetags.object_permission_tags')
+#from django.template import add_to_builtins
+#add_to_builtins('object_permission.templatetags.object_permission_tags')
 
 # Automatically call `modify_permission` of all model
 from django.db.models.signals import post_save, m2m_changed

@@ -96,31 +96,30 @@ Example mini blog app
 
 ``index.html``::
 
+	{% load object_permission_tags %}
 	<html>
 	<head>
 		<title>django-object-permission example</title>
 	</head>
 	<body>
-		{% ifhsp 'blog.add_entry','blog.change_entry','blog.delete_entry' of user for object %}
+		{% if 'blog.add_entry' of None or 'blog.change_entry' of object or 'blog.delete_entry' of object %}
 		<!-- displayed only user who has `blog.add_entry` permission, 
 			`blog.change_entry` permision for object or
 			`blog.delete_entry` permission for object -->
-		<h2>Toolbox</h2>
-		{% ifhsp 'blog.add_entry' of user %}
-		<!-- displayed only user who has `blog.add_entry` permission -->
-		<a href="{% url 'blog-entry-create' %}">Add New Entry</a>
-		{% endifhsp %}
-		{% if object %}
-		{% ifhsp 'blog.change_entry' of user for object %}
-		<!-- displayed only user who has `blog.change_entry` permission for object -->
-		<a href="{% url 'blog-entry-update' object.pk %}">Change this entry</a>
-		{% endifhsp %}
-		{% ifhsp 'blog.delete_entry' of user for object %}
-		<!-- displayed only user who has `blog.delete_entry` permission for object -->
-		<a href="{% url 'blog-entry-delete' object.pk %}">Delete this entry</a>
-		{% endifhsp %}
+			<h2>Toolbox</h2>
+			{% if 'blog.add_entry' of object %}
+				<!-- displayed only user who has `blog.add_entry` permission -->
+				<a href="{% url 'blog-entry-create' %}">Add New Entry</a>
+			{% endif %}
+			{% if object and 'blog.change_entry' of object %}
+				<!-- displayed only user who has `blog.change_entry` permission for object -->
+				<a href="{% url 'blog-entry-update' object.pk %}">Change this entry</a>
+			{% endif %}
+			{% if object and 'blog.delete_entry' of object %}
+				<!-- displayed only user who has `blog.delete_entry` permission for object -->
+				<a href="{% url 'blog-entry-delete' object.pk %}">Delete this entry</a>
+			{% endif%}
 		{% endif %}
-		{% endifhsp %}
 	</body>
 	</html>
 

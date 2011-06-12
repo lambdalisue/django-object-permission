@@ -1,166 +1,117 @@
-# -*- coding: utf-8 -*-
-#
-# Author:        alisue
-# Date:            2010/11/29
-#
+"""
+Django 1.2 template tag that supports {% elif %} branches and
+'of' operator for checking object permission.
+
+WARNING:
+    This template tag assumed that context has 'request' so make sure your TEMPLATE_CONTEXTS is like below
+    
+        TEMPLATE_CONTEXT_PROCESSORS = (
+            "django.core.context_processors.auth",           # This one is required
+            "django.core.context_processors.debug",
+            "django.core.context_processors.i18n",
+            "django.core.context_processors.media",
+            "django.core.context_processors.request",        # This one is required
+        )
+        
+Usage:
+
+    {% if 'blogs.add_entry' of None or user.is_staff %}
+        You can add post
+    {% elif 'blogs.change_entry' of object or 'blogs.delete_entry' of object %}
+        You can update/delete this entry
+    {% endif %}
+    
+"""
 from django import template
+from django.template import Node, VariableDoesNotExist
+from django.template.smartif import infix
+from django.template.smartif import IfParser
+from django.template.smartif import OPERATORS as _OPERATORS
+from django.template.defaulttags import TemplateLiteral
 
 register = template.Library()
 
-class IfHasPermNode(template.Node):
-    child_nodelists = ('nodelist_true', 'nodelist_false')
+OPERATORS = dict(_OPERATORS,
+    of=infix(10, lambda context, x, y: template.resolve_variable('request', context).user.has_perm(x.eval(context), y.eval(context)))
+)
 
-    def __init__(self, perms, obj, user, nodelist_true, nodelist_false, negate, strict=False):
-        self.perms, self.obj, self.user = perms, obj, user
-        self.nodelist_true, self.nodelist_false = nodelist_true, nodelist_false
-        self.negate = negate
-        self.strict = strict
+class ObjectPermissionIfParser(IfParser):
+    def translate_token(self, token):
+        try:
+            op = OPERATORS[token]
+        except (KeyError, TypeError):
+            return self.create_var(token)
+        else:
+            return op()
+class TemplateObjectPermissionIfParser(ObjectPermissionIfParser):
+    error_class = template.TemplateSyntaxError
+
+    def __init__(self, parser, *args, **kwargs):
+        self.template_parser = parser
+        return super(TemplateObjectPermissionIfParser, self).__init__(*args, **kwargs)
+
+    def create_var(self, value):
+        return TemplateLiteral(self.template_parser.compile_filter(value), value)
+    
+class IfBranch(object):
+    def __init__(self, var, node_list):
+        self.var = var
+        self.node_list = node_list
+
+class IfNode(Node):
+    def __init__(self, branches):
+        self.branches = branches
 
     def __repr__(self):
-        return "<IfHasPermNode>"
+        return "<If node>"
+
+    def __iter__(self):
+        for n in self.branches:
+            for node in n:
+                yield node
 
     def render(self, context):
-        perms = [perm.resolve(context) for perm in self.perms]
-        user = self.user.resolve(context)
-        obj = self.obj.resolve(context) if self.obj else None
-        result = False
-        for perm in perms:
-            if user.has_perm(perm, obj):
-                result = True
+        for n in self.branches:
+            var = n.var
+            if var != True:
+                try:
+                    var = var.eval(context)
+                except VariableDoesNotExist:
+                    var = None
+            if var:
+                return n.node_list.render(context)
                 break
-            if not self.strict and user.has_perm(perm):
-                result = True
-                break
-        if (self.negate and not result) or (not self.negate and result):
-            return self.nodelist_true.render(context)
-        return self.nodelist_false.render(context)
+        return ""
 
-def do_ifhasperm(parser, token, negate, strict=False):
-    tagname = token.split_contents()[0]
-    
-    if_elifs = []
-    if_spelling = tagname
-    endif_spelling = 'end' + tagname
-    
-    def parse(bits):
-        # <perms> of <object> for <user>
-        if len(bits) == 5:
-            if bits[1] != 'of':
-                raise template.TemplateSyntaxError("second argument of %r must be 'of'" % tagname)
-            elif bits[3] != 'for':
-                raise template.TemplateSyntaxError("forth argument of %r must be 'for'" % tagname)
-            object = parser.compile_filter(bits[2])
-            user = parser.compile_filter(bits[4])
-        # <perms> for <user>
-        elif len(bits) == 3:
-            if bits[1] != 'for':
-                raise template.TemplateSyntaxError("second argument of %r must be 'for'" % tagname)
-            object = None
-            user = parser.compile_filter(bits[2])
-        perms = [parser.compile_filter(perm) for perm in bits[0].split(',')]
-        return perms, object, user
-    
+@register.tag('if')
+def do_if(parser, token):
     class Enders(list):
+        def __init__(self, endtag):
+            self.endtag = endtag
         def __contains__(self, val):
-            return val.startswith('elif') or val in ['else', endif_spelling]
-    enders = Enders()
+            return val.startswith('elif') or val in ('else', self.endtag)
+    
+    name = contents = token.split_contents()[0]
+    endtag = "end%s" % name
+    enders = Enders(endtag)
+    branches = []
     
     while True:
-        bits = token.split_contents()
-        command = bits[0]
-        bits = bits[1:]
-        if command == if_spelling:
-            perms, object, user = parse(bits)
+        contents = token.split_contents()
+        bits = contents[1:]
+        if contents[0] in (name, "elif"):
+            var = TemplateObjectPermissionIfParser(parser, bits).parse()
             nodelist = parser.parse(enders)
             next_token = parser.next_token()
-            if_elifs.append((perms, object, user, nodelist, token))
-            if_spelling = 'elif'
+            branches.append(IfBranch(var, nodelist))
             token = next_token
         elif token.contents == 'else':
-            nodelist_false = parser.parse((endif_spelling,))
+            nodelist = parser.parse((endtag,))
             parser.delete_first_token()
+            branches.append(IfBranch(True, nodelist))
             break
-        elif token.contents == endif_spelling:
-            nodelist_false = template.NodeList()
+        elif token.contents == endtag:
             break
-    while len(if_elifs) > 1:
-        perms, object, user, nodelist_true, token = if_elifs.pop()
-        false_node = IfHasPermNode(perms, object, user, nodelist_true, nodelist_false, negate, strict)
-        nodelist_false = parser.create_nodelist()
-        parser.extend_nodelist(nodelist_false, false_node, token)
-    perms, object, user, nodelist_true, token = if_elifs[0]
-    return IfHasPermNode(perms, object, user, nodelist_true, nodelist_false, negate, strict)
 
-@register.tag('ifhsp')
-def ifhasperm(parser, token):
-    """
-    Outputs the contents of the block if the user has permission of object.
-
-    Examples::
-
-        {% ifhsp 'change_object' of object for user %}
-            ...
-        {% elif 'delete_object' of object for user %}
-            ...
-        {% elif 'add_object' for user %}
-            ...
-        {% else %}
-            ...
-        {% endifhsp %}
-
-        {% ifnothsp 'change_object' of object for user %}
-            ...
-        {% elif 'delete_object' of object for user %}
-            ...
-        {% elif 'add_object' for user %}
-            ...
-        {% else %}
-            ...
-        {% endifnothsp %}
-    """
-    return do_ifhasperm(parser, token, False)
-
-@register.tag('ifnothsp')
-def ifnothasperm(parser, token):
-    """
-    Outputs the contents of the block if the user has permission of object.
-    See ifhasperm.
-    """
-    return do_ifhasperm(parser, token, True)
-
-@register.tag('ifhsps')
-def ifhasperm_strict(parser, token):
-    """
-    Outputs the contents of the block if the user has permission of object.
-
-    Examples::
-
-        {% ifhsps 'change_object' of object for user %}
-            ...
-        {% elif 'delete_object' of object for user %}
-            ...
-        {% elif 'add_object' for user %}
-            ...
-        {% else %}
-            ...
-        {% endifhsps %}
-
-        {% ifnothsps 'change_object' of object for user %}
-            ...
-        {% elif 'delete_object' of object for user %}
-            ...
-        {% elif 'add_object' for user %}
-            ...
-        {% else %}
-            ...
-        {% endifnothsps %}
-    """
-    return do_ifhasperm(parser, token, False, strict=True)
-
-@register.tag('ifnothsps')
-def ifnothasperm_strict(parser, token):
-    """
-    Outputs the contents of the block if the user has permission of object.
-    See ifhasperm.
-    """
-    return do_ifhasperm(parser, token, True, strict=True)
+    return IfNode(branches)
+register.tag("ifhsp", do_if)
