@@ -11,8 +11,8 @@ from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
         
-class ObjectPermission(models.Model):
-    u"""
+class BaseObjectPermission(models.Model):
+    """
     Permission model for perticular object
     """
     content_type    = models.ForeignKey(ContentType, verbose_name=_('content type'), null=True)
@@ -24,8 +24,8 @@ class ObjectPermission(models.Model):
     class Meta:
         abstract    = True
         
-class GroupObjectPermission(ObjectPermission):
-    u"""
+class GroupObjectPermission(BaseObjectPermission):
+    """
     Object permission model for group
     """
     group   = models.ForeignKey(Group, verbose_name=_('group'))
@@ -36,8 +36,8 @@ class GroupObjectPermission(ObjectPermission):
         verbose_name        = _('group object permission')
         verbose_name_plural = _('group object permissions')
         
-class AnonymousObjectPermission(ObjectPermission):
-    u"""
+class AnonymousObjectPermission(BaseObjectPermission):
+    """
     Object permission model for anonymous user
     """
     class Meta:
@@ -46,8 +46,8 @@ class AnonymousObjectPermission(ObjectPermission):
         verbose_name        = _('anonymous object permission')
         verbose_name_plural = _('anonymous object permissions')
 
-class UserObjectPermission(ObjectPermission):
-    u"""
+class UserObjectPermission(BaseObjectPermission):
+    """
     Object permission model for user
     """
     user    = models.ForeignKey(User, blank=True, null=True, verbose_name=_('user'), help_text=_('`None` for all authenticated user'))

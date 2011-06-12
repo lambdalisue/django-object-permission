@@ -29,9 +29,9 @@ def generic_permission_check(queryset, perm, request, *args, **kwargs):
         **kwargs    - **kwargs for view function
     
     Usage:
-        from libwaz.views.generic import list_detail
-        from libwaz.http import Http403
-        from libwaz.contrib.object_permission.utils import generic_permission_check
+        from django.http import HttpResponseForbidden
+        from django.views.generic import list_detail
+        from object_permission.utils import generic_permission_check
         
         def permission_required(perm, model):
             def wrapper(fn):
@@ -39,7 +39,7 @@ def generic_permission_check(queryset, perm, request, *args, **kwargs):
                     # Filtering queryset with `author`
                     queryset = model.objects.filter(author=kwargs['author'])
                     if not generic_permission_check(queryset, perm, request, *args, **kwargs):
-                        raise Http403
+                        return HttpResponseForbidden()
                     return fn(request, *args, **kwargs)
                 return inner
             return wrapper
@@ -59,7 +59,11 @@ def generic_permission_check(queryset, perm, request, *args, **kwargs):
             publish_at__day=kwargs['day'],
             title=kwargs['slug'])
     elif 'object_id' in kwargs:
+        # For method based generic view
         obj = get_object_or_404(queryset, pk=kwargs['object_id'])
+    elif 'pk' in kwargs:
+        # For class based generic view
+        obj = get_object_or_404(queryset, pk=kwargs['pk'])
     elif 'slug' in kwargs:
         slug_field = kwargs.get('slug_field', 'slug')
         obj = get_object_or_404(queryset, **{slug_field: kwargs['slug']})
