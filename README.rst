@@ -102,24 +102,24 @@ Example mini blog app
 		<title>django-object-permission example</title>
 	</head>
 	<body>
-		{% if 'blog.add_entry' of None or 'blog.change_entry' of object or 'blog.delete_entry' of object %}
+		{% pif 'blog.add_entry' of None or 'blog.change_entry' of object or 'blog.delete_entry' of object %}
 		<!-- displayed only user who has `blog.add_entry` permission, 
 			`blog.change_entry` permision for object or
 			`blog.delete_entry` permission for object -->
 			<h2>Toolbox</h2>
-			{% if 'blog.add_entry' of object %}
+			{% pif 'blog.add_entry' of object %}
 				<!-- displayed only user who has `blog.add_entry` permission -->
 				<a href="{% url 'blog-entry-create' %}">Add New Entry</a>
-			{% endif %}
-			{% if object and 'blog.change_entry' of object %}
+			{% endpif %}
+			{% pif object and 'blog.change_entry' of object %}
 				<!-- displayed only user who has `blog.change_entry` permission for object -->
 				<a href="{% url 'blog-entry-update' object.pk %}">Change this entry</a>
-			{% endif %}
-			{% if object and 'blog.delete_entry' of object %}
+			{% endpif %}
+			{% pif object and 'blog.delete_entry' of object %}
 				<!-- displayed only user who has `blog.delete_entry` permission for object -->
 				<a href="{% url 'blog-entry-delete' object.pk %}">Delete this entry</a>
-			{% endif%}
-		{% endif %}
+			{% endpif%}
+		{% endpif %}
 	</body>
 	</html>
 
