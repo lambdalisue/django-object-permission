@@ -15,11 +15,11 @@ WARNING:
         
 Usage:
 
-    {% if 'blogs.add_entry' of None or user.is_staff %}
+    {% pif 'blogs.add_entry' of None or user.is_staff %}
         You can add post
     {% elif 'blogs.change_entry' of object or 'blogs.delete_entry' of object %}
         You can update/delete this entry
-    {% endif %}
+    {% endpif %}
     
 """
 from django import template
@@ -83,7 +83,7 @@ class IfNode(Node):
                 break
         return ""
 
-@register.tag('if')
+@register.tag('pif')
 def do_if(parser, token):
     class Enders(list):
         def __init__(self, endtag):
