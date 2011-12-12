@@ -75,7 +75,7 @@ class ObjectPermissionMediator(object):
             except Permission.DoesNotExist:
                 # Django default permissions have model name at the end
                 perm = "%s_%s" % (perm, ctype.model)
-                permission = Permission.objects.get(
+                permission, created = Permission.objects.get_or_create(
                     content_type=ctype,
                     codename=perm,
                 )
