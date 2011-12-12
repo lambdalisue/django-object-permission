@@ -3,7 +3,13 @@
 # Author:        alisue
 # Date:            2010/11/07
 #
+import warnings
 from django.conf import settings
+
+if ('object_permission.backends.ObjectPermBackend' not in
+        getattr(settings, 'AUTHENTICATION_BACNEKDS', '')):
+    warnings.warn("""'object_permission.backends.ObjectPermBackend' is not """
+                  """in `AUTHENTICATION_BACKENDS`""")
 
 settings.OBJECT_PERMISSION_MODIFY_FUNCTION = getattr(settings, 'OBJECT_PERMISSION_MODIFY_FUNCTION', 'modify_object_permission')
 settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION = getattr(settings, 'OBJECT_PERMISSION_MODIFY_M2M_FUNCTION', 'modify_object_permission_m2m')

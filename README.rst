@@ -14,10 +14,11 @@ or::
 How to Use
 ==========================================
 
-1.  Append ``object_permission`` to ``INSTALLED_APPS``
-2.  run ``manage.py syncdb``
-3.  Add ``modify_object_permission(mediator, created)`` and ``modify_object_permission_m2m(mediator, sender, model, pk_set, removed)`` to the target model at ``models.py``
-4.  Use ``object_permission.decorators.permission_required(parm, queryset)`` to filtering view or whatever
+1.  Append 'object_permission' to ``INSTALLED_APPS``
+2.  Append 'object_permission.backends.ObjectPermBackend' to ``AUTHENTICATION_BACKENDS``
+3.  run ``manage.py syncdb``
+4.  Add ``modify_object_permission(mediator, created)`` and ``modify_object_permission_m2m(mediator, sender, model, pk_set, removed)`` to the target model at ``models.py``
+5.  Use ``object_permission.decorators.permission_required(parm, queryset)`` to filtering view or whatever
 
 
 Example mini blog app
