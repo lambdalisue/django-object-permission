@@ -74,8 +74,13 @@ class ObjectPermBackend(object):
         # exists check for `perm`
         if not Permission.objects.filter(
                 content_type=ct, codename=perm).exists():
-            # Django default permissions have model name at the end.
-            _perm = "%s_%s" % (perm, ct.model)
+            # To enable custom suffix
+            if hasattr(obj, 'object_permission_suffix'):
+                suffix = getattr(obj, 'object_permission_suffix')
+            else:
+                # Django default permissions have model name at the end.
+                suffix = str(ct.model)
+            _perm = "%s_%s" % (perm, suffix)
             if not Permission.objects.filter(
                     content_type=ct, codename=_perm).exists():
                 permissions = [p.codename for p in 
