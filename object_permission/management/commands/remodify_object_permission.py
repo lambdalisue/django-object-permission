@@ -1,8 +1,32 @@
-# -*- coding: utf-8 -*-
-#
-# Author:        alisue
-# Date:            2010/11/30
-#
+#!/usr/bin/env python
+# vim: set fileencoding=utf8:
+"""
+commands for django-object-permission
+
+Django 1.2 template tag that supports {% elif %} branches and
+'of' operator for checking object permission.
+
+
+AUTHOR:
+    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
+    
+Copyright:
+    Copyright 2011 Alisue allright reserved.
+
+License:
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unliss required by applicable law or agreed to in writing, software
+    distributed under the License is distrubuted on an "AS IS" BASICS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+__AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.conf import settings
 from django.db.models.loading import get_models
 from django.contrib.contenttypes.models import ContentType
@@ -12,30 +36,33 @@ from django.core.exceptions import ImproperlyConfigured
 from ...mediators import ObjectPermissionMediator
 
 class Command(BaseCommand):
-    help = u"Remodify object_permission of each model using model's `modify_object_permission(self, mediator, created)` function."
+    help = ("""Remodify object_permission of each model using model's """
+            """`modify_object_permission(self, mediator, created)` function.""")
 
     def handle(self, *app_labels, **options):
-        # Historyを停止
-        settings.HISTORY_ENABLE = False
         from django.db import models
         if not app_labels:
             output = [self.handle_noargs(**options)]
         else:
             try:
-                app_list = [models.get_app(app_label) for app_label in app_labels]
+                app_list = [models.get_app(app_label) 
+                        for app_label in app_labels]
             except (ImproperlyConfigured, ImportError), e:
-                raise CommandError("%s. Are you sure your INSTALLED_APPS setting is correct?" % e)
+                raise CommandError(
+                        """"%s. Are you sure your INSTALLED_APPS setting is """
+                        """correct?""" % e)
             output = []
             for app in app_list:
                 app_output = self.handle_app(app, **options)
                 if app_output:
                     output.append(app_output)
-        # Historyを再開
-        settings.HISTORY_ENABLE = True
         return '\n'.join(output)
     
     def handle_app(self, app, **options):
-        u"Remodify object_permission of each model using model's `modify_object_permission(self, mediator, created)` function."
+        """
+        Remodify object_permission of each model using model's 
+        `modify_object_permission(self, mediator, created)` function.
+        """
         output = []
         model_list = get_models(app)
         for model in model_list:
@@ -60,7 +87,9 @@ class Command(BaseCommand):
         output = []
         if not hasattr(model, NAME) and not hasattr(model, NAME_M2M):
             if options['verbosity'] == '2':
-                output.append("Skipped: %s doesn't have `%s` and `%s` function." % (model, NAME, NAME_M2M))
+                output.append(
+                        """Skipped: %s doesn't have `%s` and `%s` function."""
+                        % (model, NAME, NAME_M2M))
         else:
             has = hasattr(model, NAME)
             has_m2m = hasattr(model, NAME_M2M)
@@ -74,8 +103,12 @@ class Command(BaseCommand):
                     for field in obj._meta.many_to_many:
                         sender = field.rel.through
                         model = field.rel.to
-                        pk_set = [to.pk for to in getattr(obj, field.attname).all()]
-                        fn_m2m(mediator=ObjectPermissionMediator, sender=sender, model=model, pk_set=pk_set, removed=False)
+                        pk_set = [to.pk 
+                                for to in getattr(obj, field.attname).all()]
+                        fn_m2m(mediator=ObjectPermissionMediator, sender=sender,
+                               model=model, pk_set=pk_set, removed=False)
             if options['verbosity'] != '0':
-                output.append("Modified: %s's object_permission has remodified (%d)" % (model, count))
+                output.append(
+                    """Modified: %s's object_permission has remodified (%d)""" 
+                    % (model, count))
         return "\n".join(output)
