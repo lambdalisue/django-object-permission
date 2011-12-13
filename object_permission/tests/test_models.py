@@ -26,7 +26,7 @@ License:
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
-from django.contrib.flatpages.models import Flatpage
+from django.contrib.flatpages.models import FlatPage
 from django.contrib.contenttypes.models import ContentType
 
 from base import TestCase

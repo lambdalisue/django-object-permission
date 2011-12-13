@@ -34,6 +34,5 @@ setup(
     zip_safe = True,
     install_requires=[
         'setuptools',
-        'PyYAML',
         ],
 )
