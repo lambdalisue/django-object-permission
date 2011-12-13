@@ -111,8 +111,12 @@ class ObjectPermissionMediator(object):
                     codename=perm,
                 )
             except Permission.DoesNotExist:
-                # Django default permissions have model name at the end
-                perm = "%s_%s" % (perm, ctype.model)
+                if hasattr(obj, 'object_permission_suffix'):
+                    suffix = getattr(obj, 'object_permission_suffix')
+                else:
+                    # Django default permissions have model name at the end
+                    suffix = "_" + str(ctype.model)
+                perm = perm + suffix
                 permission, created = Permission.objects.get_or_create(
                     content_type=ctype,
                     codename=perm,
@@ -148,8 +152,12 @@ class ObjectPermissionMediator(object):
                     codename=perm,
                 )
             except Permission.DoesNotExist:
-                # Django default permissions have model name at the end
-                perm = "%s_%s" % (perm, ctype.model)
+                if hasattr(obj, 'object_permission_suffix'):
+                    suffix = getattr(obj, 'object_permission_suffix')
+                else:
+                    # Django default permissions have model name at the end
+                    suffix = "_" + str(ctype.model)
+                perm = perm + suffix
                 permission = Permission.objects.get(
                     content_type=ctype,
                     codename=perm,
