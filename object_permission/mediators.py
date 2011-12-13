@@ -1,23 +1,61 @@
-# -*- coding: utf-8 -*-
-#
-# Author:        alisue
-# Date:            2010/11/29
-#
+#!/usr/bin/env python
+# vim: set fileencoding=utf8:
+"""
+object-permission mediator module
+
+mediator is to use add/remove permissions to particular object
+
+
+AUTHOR:
+    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
+    
+Copyright:
+    Copyright 2011 Alisue allright reserved.
+
+License:
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unliss required by applicable law or agreed to in writing, software
+    distributed under the License is distrubuted on an "AS IS" BASICS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+__AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User, Group, AnonymousUser, Permission
 
 from models import UserObjectPermission, GroupObjectPermission, AnonymousObjectPermission
 
 class ObjectPermissionMediator(object):
+    """object-permission mediator
+
+    this is used to add/remove permissions of particular user (include
+    anonymous) to particular object.
+
+    >>> mediator = ObjectPermissionMediator
+    >>> assert callable(getattr(mediator, 'get_permission'))
+    >>> assert callable(getattr(mediator, 'contribute'))
+    >>> assert callable(getattr(mediator, 'discontribute'))
+    >>> assert callable(getattr(mediator, 'manager'))
+    >>> assert callable(getattr(mediator, 'editor'))
+    >>> assert callable(getattr(mediator, 'viewer'))
+    >>> assert callable(getattr(mediator, 'reject'))
+    """
+
     @classmethod
     def get_permission(cls, obj, to=None):
-        u"""
-        Get permission for `obj` to `to` with parameter
+        """Get permission for `obj` to `to` with parameter
         
         Attribute:
             obj        - tareget object for permission
             to         - User, Group, AnonymousUser to cotribute permission.
-                        `None` mean contribute permission to all authenticated user
+                        `None` mean contribute permission to all authenticated
+                        user
         """
         
         ctype = ContentType.objects.get_for_model(obj)
@@ -44,19 +82,19 @@ class ObjectPermissionMediator(object):
         return instance
     @classmethod
     def contribute(cls, obj, to=None, permissions=[], clear=False):
-        u"""
-        Contribute permission for `obj` to `to` with parameter
+        """Contribute permission for `obj` to `to` with parameter
         
         Attribute:
             obj         - tareget object for permission
             to          - User, Group, AnonymousUser to cotribute permission.
-                         `None` mean contribute permission to all authenticated user
+                         `None` mean contribute permission to all authenticated
+                         user
             permissions - codename list of permission
             append      - `True` to append `permissions`, default is `False`
         
         Notice:
-            this method is super method. Use `manager`, `editor`, `viewer` and `reject`
-            for noraml usage.
+            this method is super method. Use `manager`, `editor`, `viewer` 
+            and `reject` for noraml usage.
         """
         ctype = ContentType.objects.get_for_model(obj)
         instance = cls.get_permission(obj, to)
@@ -84,19 +122,18 @@ class ObjectPermissionMediator(object):
         return instance
     @classmethod
     def discontribute(cls, obj, to=None, permissions=[]):
-        u"""
-        Discontribute permission for `obj` to `to` with parameter
+        """Discontribute permission for `obj` to `to` with parameter
         
         Attribute:
             obj         - tareget object for permission
             to          - User, Group, AnonymousUser to cotribute permission.
-                         `None` mean contribute permission to all authenticated user
+                         `None` mean contribute permission to all authenticated
+                         user
             permissions - codename list of permission
-            append      - `True` to append `permissions`, default is `False`
         
         Notice:
-            this method is super method. Use `manager`, `editor`, `viewer` and `reject`
-            for noraml usage.
+            this method is super method. Use `manager`, `editor`, `viewer` 
+            and `reject` for noraml usage.
         """
         ctype = ContentType.objects.get_for_model(obj)
         instance = cls.get_permission(obj, to)
@@ -122,50 +159,60 @@ class ObjectPermissionMediator(object):
         return instance
     @classmethod
     def manager(cls, obj, to, extra_permissions=[]):
-        u"""
-        Contribute manager permission (can view, change, delete) for `obj` to `to`
+        """
+        Contribute manager permission (can view, change, delete) for `obj` 
+        to `to`
         
         Attribute:
             obj        - tareget object for permission
             to         - User, Group, AnonymousUser to cotribute permission.
-                        `None` can_view   - `view` permissionOld permission
-            can_change - `change` permission
-            can_delete - `delete` permissionmean contribute permission to all authenticated user
+                        `None` mean contribute permission to all authenticated
+                        user
         """
-        return cls.contribute(obj, to, ['view', 'change', 'delete']+list(extra_permissions), clear=True)
+        permissions = ['view', 'change', 'delete'] + list(extra_permissions)
+        return cls.contribute(obj, to, permissions, clear=True)
     
     @classmethod
     def editor(cls, obj, to, extra_permissions=[]):
-        u"""
-        Contribute editor permission (can view, change. cannot delete) for `obj` to `to`
+        """
+        Contribute editor permission (can view, change. cannot delete) for 
+        `obj` to `to`
         
         Attribute:
             obj        - tareget object for permission
             to         - User, Group, AnonymousUser to cotribute permission.
-                        `None` mean contribute permission to all authenticated user
+                        `None` mean contribute permission to all authenticated
+                        user
         """
-        return cls.contribute(obj, to, ['view', 'change']+list(extra_permissions), clear=True)
+        permissions = ['view', 'change'] + list(extra_permissions)
+        return cls.contribute(obj, to, permissions, clear=True)
     
     @classmethod
     def viewer(cls, obj, to, extra_permissions=[]):
-        u"""
-        Contribute viewer permission (can view. cannot change, delete) for `obj` to `to`
+        """
+        Contribute viewer permission (can view. cannot change, delete) for 
+        `obj` to `to`
         
         Attribute:
             obj        - tareget object for permission
             to         - User, Group, AnonymousUser to cotribute permission.
-                        `None` mean contribute permission to all authenticated user
+                        `None` mean contribute permission to all authenticated
+                        user
         """
-        return cls.contribute(obj, to, ['view']+list(extra_permissions), clear=True)
+        permissions = ['view'] + list(extra_permissions)
+        return cls.contribute(obj, to, permissions, clear=True)
     
     @classmethod
     def reject(cls, obj, to, extra_permissions=[]):
-        u"""
-        Contribute reject permission (cannot view change, delete) for `obj` to `to`
+        """
+        Contribute reject permission (cannot view change, delete) for `obj`
+        to `to`
         
         Attribute:
             obj        - tareget object for permission
             to         - User, Group, AnonymousUser to cotribute permission.
-                        `None` mean contribute permission to all authenticated user
+                        `None` mean contribute permission to all authenticated
+                        user
         """
-        return cls.contribute(obj, to, []+list(extra_permissions), clear=True)
+        permissions = [] + list(extra_permissions)
+        return cls.contribute(obj, to, permissions, clear=True)

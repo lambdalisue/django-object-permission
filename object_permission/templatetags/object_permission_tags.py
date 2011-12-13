@@ -1,27 +1,34 @@
+#!/usr/bin/env python
+# vim: set fileencoding=utf8:
 """
+templatetag for django-object-permission
+
 Django 1.2 template tag that supports {% elif %} branches and
 'of' operator for checking object permission.
 
-WARNING:
-    This template tag assumed that context has 'request' so make sure your TEMPLATE_CONTEXTS is like below
-    
-        TEMPLATE_CONTEXT_PROCESSORS = (
-            "django.core.context_processors.auth",           # This one is required
-            "django.core.context_processors.debug",
-            "django.core.context_processors.i18n",
-            "django.core.context_processors.media",
-            "django.core.context_processors.request",        # This one is required
-        )
-        
-Usage:
 
-    {% pif 'blogs.add_entry' of None or user.is_staff %}
-        You can add post
-    {% elif 'blogs.change_entry' of object or 'blogs.delete_entry' of object %}
-        You can update/delete this entry
-    {% endpif %}
+AUTHOR:
+    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
     
+Copyright:
+    Copyright 2011 Alisue allright reserved.
+
+License:
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unliss required by applicable law or agreed to in writing, software
+    distributed under the License is distrubuted on an "AS IS" BASICS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
+__AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+import warnings
+
 from django import template
 from django.template import Node, VariableDoesNotExist
 from django.template.smartif import infix
@@ -83,8 +90,36 @@ class IfNode(Node):
                 break
         return ""
 
+@register.tag('ifhsp')
+def do_ifhsp(parser, token):
+    warnings.warn('deprecated. use `pif` insted', DeprecationWarning)
+    return do_ifhsp(parser, token)
 @register.tag('pif')
 def do_if(parser, token):
+    """
+    Django 1.2 template tag that supports {% elif %} branches and
+    'of' operator for checking object permission.
+
+    .. Warning::
+        This template tag assumed that context has 'request' so make sure your
+        ``TEMPLATE_CONTEXTS`` is like below::
+        
+            TEMPLATE_CONTEXT_PROCESSORS = (
+                "django.core.context_processors.auth",           # This one is required
+                "django.core.context_processors.debug",
+                "django.core.context_processors.i18n",
+                "django.core.context_processors.media",
+                "django.core.context_processors.request",        # This one is required
+            )
+
+    Usage::
+
+        {% pif 'blogs.add_entry' of None or user.is_staff %}
+            You can add post
+        {% elif 'blogs.change_entry' of object or 'blogs.delete_entry' of object %}
+            You can update/delete this entry
+        {% endpif %}
+    """
     class Enders(list):
         def __init__(self, endtag):
             self.endtag = endtag
@@ -114,4 +149,3 @@ def do_if(parser, token):
             break
 
     return IfNode(branches)
-register.tag("ifhsp", do_if)

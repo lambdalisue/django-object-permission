@@ -1,25 +1,38 @@
-# -*- coding: utf-8 -*-
-#
-# Author:        alisue
-# Date:            2010/11/07
-#
+#!/usr/bin/env python
+# vim: set fileencoding=utf8:
+"""
+utilities of django-object-permission
+
+
+AUTHOR:
+    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
+    
+Copyright:
+    Copyright 2011 Alisue allright reserved.
+
+License:
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unliss required by applicable law or agreed to in writing, software
+    distributed under the License is distrubuted on an "AS IS" BASICS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+__AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.shortcuts import get_object_or_404
 
-#
-# Notice:
-#    DO NOT USE `generic_permission_check` for normal generic view.
-#    there is `permission_check` decorator on `libwaz.contrib.object_permission.decorators`
-#    and using `generic_permission_check` approach make no sence.
-#    `generic_permission_check` approach only make sence when you need to filtering
-#    queryset because otherwise `get` method return multiple objects.
-#
-#    Example usage:
-#    You have a Blog application and you are using `date_based` filtering with `author` field.
-#    Then you need to filtering queryset with `author` before hand queryset to permission check
-#    
 def generic_permission_check(queryset, perm, request, *args, **kwargs):
-    u"""
+    """
     Generic permission check
+
+    useful to create custom permission_required decorator. DO NOT create your
+    own permission_required while ``permission_required`` decorator is exsits
+    at ``object_permission.decorators``
     
     Arguments:
         queryset    - queryset of object
@@ -28,26 +41,26 @@ def generic_permission_check(queryset, perm, request, *args, **kwargs):
         *args       - *args for view function
         **kwargs    - **kwargs for view function
     
-    Usage:
-        from django.http import HttpResponseForbidden
-        from django.views.generic import list_detail
-        from object_permission.utils import generic_permission_check
-        
-        def permission_required(perm, model):
-            def wrapper(fn):
-                def inner(request, *args, **kwargs):
-                    # Filtering queryset with `author`
-                    queryset = model.objects.filter(author=kwargs['author'])
-                    if not generic_permission_check(queryset, perm, request, *args, **kwargs):
-                        return HttpResponseForbidden()
-                    return fn(request, *args, **kwargs)
-                return inner
-            return wrapper
-        
-        @permission_required('blogs.view_blog', Entry)
-        def object_detail(request, *args, **kwargs):
-            kwargs['queryset'] = kwargs['queryset'].filter(author__username=kwargs['author'])
-            return list_detail.object_list(request, *args, **kwargs)
+    Example:
+    >>> from django.http import HttpResponseForbidden
+    >>> from django.views.generic import list_detail
+    >>> from object_permission.utils import generic_permission_check
+    >>> 
+    >>> def permission_required(perm, model):
+    ...     def wrapper(fn):
+    ...         def inner(request, *args, **kwargs):
+    ...             # Filtering queryset with `author`
+    ...             queryset = model.objects.filter(author=kwargs['author'])
+    ...             if not generic_permission_check(queryset, perm, request, *args, **kwargs):
+    ...                 return HttpResponseForbidden()
+    ...             return fn(request, *args, **kwargs)
+    ...         return inner
+    ...     return wrapper
+    >>> 
+    >>> @permission_required('blogs.view_blog', Entry)
+    >>> def object_detail(request, *args, **kwargs):
+    ...     kwargs['queryset'] = kwargs['queryset'].filter(author__username=kwargs['author'])
+    ...     return list_detail.object_list(request, *args, **kwargs)
     
     """
     if queryset is None:

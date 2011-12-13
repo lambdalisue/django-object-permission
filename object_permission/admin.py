@@ -1,54 +1,31 @@
-# -*- coding: utf-8 -*-
-#
-# Author:        alisue
-# Date:            2010/11/07
-#
-from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
-from django.contrib import admin
-from django.contrib.contenttypes.generic import GenericTabularInline
-from django.contrib.flatpages.models import FlatPage
-from django.contrib.flatpages.admin import FlatPageAdmin as FPAdmin
-from django.contrib import messages
-from django.core.exceptions import PermissionDenied
-from models import UserObjectPermission, GroupObjectPermission, AnonymousObjectPermission
+#!/usr/bin/env python
+# vim: set fileencoding=utf8:
+"""
+admin-site for django-object-permission
 
-#class ObjectPermissionMixin(object):
-#    def has_change_permission(self, request, obj=None):
-#        opts = self.opts
-#        return request.user.has_perm(opts.app_label + '.' + opts.get_change_permission(), obj)
-#    def has_delete_permission(self, request, obj=None):
-#        opts = self.opts
-#        return request.user.has_perm(opts.app_label + '.' + opts.get_delete_permission(), obj)
-#    
-#class UserObjectPermissionInline(GenericTabularInline):
-#    model = UserObjectPermission
-#    extra = 1
-#    raw_id_fields = ['user']
-#
-#class GroupObjectPermissionInline(GenericTabularInline):
-#    model = GroupObjectPermission
-#    extra = 1
-#    raw_id_fields = ['group']
-#
-#class AnonymousObjectPermissionInline(GenericTabularInline):
-#    model = AnonymousObjectPermission
-#    extra = 1
-#    max_num = 1
-#    can_delete = False
-#
-#class FlatPageAdmin(ObjectPermissionMixin, FPAdmin):
-#    inlines = FPAdmin.inlines + [UserObjectPermissionInline, GroupObjectPermissionInline, AnonymousObjectPermissionInline]
-#    
-#    def change_view(self, request, *args, **kwargs):
-#        try:
-#            return super(FlatPageAdmin, self).change_view(request, *args, **kwargs)
-#        except PermissionDenied, e:
-#            messages.add_message(request, messages.ERROR, u"You don't have the necessary permissions!")
-#            return HttpResponseRedirect(reverse('admin:flatpages_flatpage_changelist'))
-#
-#admin.site.unregister(FlatPage)
-#admin.site.register(FlatPage, FlatPageAdmin)
+
+AUTHOR:
+    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
+    
+Copyright:
+    Copyright 2011 Alisue allright reserved.
+
+License:
+    Licensed under the Apache License, Version 2.0 (the "License"); 
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unliss required by applicable law or agreed to in writing, software
+    distributed under the License is distrubuted on an "AS IS" BASICS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+__AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+from django.contrib import admin
+from models import UserObjectPermission, GroupObjectPermission, AnonymousObjectPermission
 
 class ObjectPermissionAdmin(admin.ModelAdmin):
     def _get_permissions(self, obj):
