@@ -33,8 +33,9 @@ class TestCase(_TestCase):
     apps = (
         'django.contrib.auth',
         'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.sites',
         'django.contrib.flatpages',
-        'object_permission',
     )
 
     def _pre_setup(self):

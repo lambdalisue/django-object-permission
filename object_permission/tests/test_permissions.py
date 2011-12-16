@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-admin-site for django-object-permission
+Unittest module of ...
 
 
 AUTHOR:
@@ -24,41 +24,12 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from django.conf import settings
-from django.test import TestCase as _TestCase
+from django.test import TestCase
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.auth.models import User, Group, AnonymousUser
 
-from mediators import ObjectPermissionMediator
+from ..mediators import ObjectPermissionMediator
 
-from django.conf import settings
-from django.core.management import call_command
-from django.db.models import loading
-
-class TestCase(_TestCase):
-    apps = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.flatpages',
-        'object_permission',
-    )
-
-    def _pre_setup(self):
-        # Add the models to the db.
-        self._original_installed_apps = list(settings.INSTALLED_APPS)
-        for app in self.apps:
-            settings.INSTALLED_APPS.append(app)
-        loading.cache.loaded = False
-        call_command('syncdb', interactive=False, verbosity=0)
-        # Call the original method that does the fixtures etc.
-        super(TestCase, self)._pre_setup()
-
-    def _post_teardown(self):
-        # Call the original method.
-        super(TestCase, self)._post_teardown()
-        # Restore the settings.
-        settings.INSTALLED_APPS = self._original_installed_apps
-        loading.cache.loaded = False
 
 class UserObjectPermBackendTest(TestCase):
     def setUp(self):
@@ -151,3 +122,4 @@ class AnonymousObjectPermBackendTest(TestCase):
         self.assertTrue(self.fread.has_perm('flatpages.view_flatpage', self.page))
         self.assertTrue(self.fread.has_perm('flatpages.change_flatpage', self.page))
         self.assertTrue(self.fread.has_perm('flatpages.delete_flatpage', self.page))
+

@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-initialization django-object-permission
+short module explanation
 
-Add this backend to your ``AUTHENTICATION_BACKENDS`` like below::
-
-    AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
-        'object_permission.backends.ObjectPermBackend',
-    )
 
 AUTHOR:
     lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
@@ -30,31 +24,6 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-import warnings
-
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.db.models.signals import m2m_changed
-
-from mediators import ObjectPermissionMediator
-
-__ALL__ = ['ObjectPermissionMediator']
-
-# Set defaut settings
-settings.OBJECT_PERMISSION_BUILTIN_TEMPLATETAG = getattr(
-        settings, 'OBJECT_PERMISSION_BUILTIN_TEMPLATETAG', True)
-settings.OBJECT_PERMISSION_MODIFY_FUNCTION = getattr(
-        settings, 'OBJECT_PERMISSION_MODIFY_FUNCTION', 
-        'modify_object_permission')
-settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION = getattr(
-        settings, 'OBJECT_PERMISSION_MODIFY_M2M_FUNCTION', 
-        'modify_object_permission_m2m')
-
-# Regist templatetags for ObjectPermission
-if settings.OBJECT_PERMISSION_BUILTIN_TEMPLATETAG:
-    from django.template import add_to_builtins
-    add_to_builtins('object_permission.templatetags.object_permission_tags')
-
 # Automatically call `modify_permission` of all model
 def _post_save_callback(sender, instance, created, **kwargs):
     if hasattr(instance, settings.OBJECT_PERMISSION_MODIFY_FUNCTION):

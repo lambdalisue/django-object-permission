@@ -34,5 +34,6 @@ setup(
     zip_safe = True,
     install_requires=[
         'setuptools',
+        'django>=1.2',
         ],
 )

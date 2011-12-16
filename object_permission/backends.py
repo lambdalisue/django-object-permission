@@ -30,9 +30,6 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-import warnings
-
-from django.conf import settings
 from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission
@@ -57,13 +54,6 @@ class ObjectPermBackend(object):
         if obj is None or not isinstance(obj, Model):
             return False
         
-        if not hasattr(obj, settings.OBJECT_PERMISSION_MODIFY_FUNCTION):
-            warnings.warn(
-                    """%r doesn't have `%s` function.""" % (
-                        obj.__class__, 
-                        settings.OBJECT_PERMISSION_MODIFY_FUNCTION
-                    ))
-            
         ct = ContentType.objects.get_for_model(obj)
         
         try:
