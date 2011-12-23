@@ -22,9 +22,9 @@ How to Use
 
 4.  Write model specific ObjectPermHandler and register it with model to ``object_permission.site``
 
-See `object_permission_test <https://github.com/lambdalisue/django-object-permission/object_permission_test/>`_
-for more detail. If you want to see Old-style storategy, see `README_old.rst <https://github.com/lambdalisue/django-object-permission/README_old.rst>`_ or
-`object_permission_test_deprecated <https://github.com/lambdalisue/django-object-permission/object_permission_test_deprecated/>`_
+See `object_permission_test <https://github.com/lambdalisue/django-object-permission/tree/master/object_permission_test/>`_
+for more detail. If you want to see Old-style storategy, see `README_old.rst <https://github.com/lambdalisue/django-object-permission/tree/master/README_old.rst>`_ or
+`object_permission_test_deprecated <https://github.com/lambdalisue/django-object-permission/tree/master/object_permission_test_deprecated/>`_
 
 Example mini blog app
 =========================================
