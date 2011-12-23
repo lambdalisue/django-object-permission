@@ -50,7 +50,7 @@ Example mini blog app
 
 		# ...
 
-``ophandler.py``
+``ophandler.py``::
 
     from object_permission import site
     # AuthorObjectPermHandler need 'django-observer' and required 'author'
