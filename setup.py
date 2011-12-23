@@ -14,7 +14,7 @@ def read(filename):
 setup(
     name="django-object-permission",
     version=version,
-    description = "Django's object permission library",
+    description = "Add object specific permission for particualr User/Group, All authenticated user or Anonymous user",
     long_description=read('README.rst'),
     classifiers = [
         'Framework :: Django',

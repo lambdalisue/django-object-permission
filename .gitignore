@@ -1,3 +1,5 @@
 /build
 /django_object_permission.egg-info
 /dist
+
+.sass-cache

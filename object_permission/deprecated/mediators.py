@@ -30,9 +30,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import AnonymousUser
 
-from models import UserObjectPermission
-from models import GroupObjectPermission
-from models import AnonymousObjectPermission
+from ..models import UserObjectPermission
+from ..models import GroupObjectPermission
+from ..models import AnonymousObjectPermission
 
 class ObjectPermissionMediator(object):
     """object-permission mediator

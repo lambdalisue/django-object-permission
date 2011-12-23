@@ -15,11 +15,16 @@ How to Use
 ==========================================
 
 1.  Append 'object_permission' to ``INSTALLED_APPS``
-2.  Append 'object_permission.backends.ObjectPermBackend' to ``AUTHENTICATION_BACKENDS``
-3.  run ``manage.py syncdb``
-4.  Add ``modify_object_permission(mediator, created)`` and ``modify_object_permission_m2m(mediator, sender, model, pk_set, removed)`` to the target model at ``models.py``
-5.  Use ``object_permission.decorators.permission_required(parm, queryset)`` to filtering view or whatever
 
+2.  Append 'object_permission.backends.ObjectPermBackend' to ``AUTHENTICATION_BACKENDS``
+
+3.  Add 'ophandler.py' to your app directory like 'admin.py'
+
+4.  Write model specific ObjectPermHandler and register it with model to ``object_permission.site``
+
+See `object_permission_test <https://github.com/lambdalisue/django-object-permission/object_permission_test/>`_
+for more detail. If you want to see Old-style storategy, see `README_old.rst <https://github.com/lambdalisue/django-object-permission/README_old.rst>`_ or
+`object_permission_test_deprecated <https://github.com/lambdalisue/django-object-permission/object_permission_test_deprecated/>`_
 
 Example mini blog app
 =========================================
@@ -28,8 +33,11 @@ Example mini blog app
 	
 	from django.db import models
 	from django.contrib.auth.models import User
-	from object_permission.mediators import ObjectPermissionMediator as Mediator
+
+	# django-author: useful for adding automatically update author field
+	from author.decorators import with_author
 	
+	@with_author
 	class Entry(models.Model):
 		PUB_STATES = (
 			('public', 'public entry'),
@@ -39,61 +47,81 @@ Example mini blog app
 		pub_state = models.CharField('publish status', choices=PUB_STATES)
 		title = models.CharField('title', max_length=140)
 		body = models.TextField('body')
-		author = models.ForeignKey(User, verbose_name='author')
 
 		# ...
 
-		# The method below is called every after when object is saved
-		def modify_object_permission(self, mediator, created):
-			# be author to manager (has `view`, `add`, `change`, `delete` permission)
-			mediator.manager(self, self.author)
-			
-			if self.pub_state == 'public':
-				# be viewer (has `view` permission) login user
-				mediator.viewer(self, None)
-				# # be editor (has `view`, `change`) login user
-				# mediator.editor(self, None)
-				# be viewer anonymous user
-				mediator.viewer(self, 'anonymous')
-			elif self.pub_state == 'protected':
-				mediator.viewer(self, None)
-				# reject anonymous user
-				mediator.reject(self, 'anonymous')
-			else:
-				mediator.reject(self, None)
-				mediator.reject(self, 'anonymous')
+``ophandler.py``
 
-		# The method below is called every after when object ManyToMany relation is updated
-		def modify_object_permission_m2m(self, mediator, sender, model, pk_set, removed):
-			pass
+    from object_permission import site
+    # AuthorObjectPermHandler need 'django-observer' and required 'author'
+    # field (the author field is automatically added by 'with_author' decorator)
+    from object_permission.handlers.author import AuthorObjectPermHandler
 
+    from models import Entry
+
+    class EntryObjectPermHandler(AuthorObjectPermHandler):
+        """Add permission of obj...
+
+        Author:
+            Full control (view, change, delete)
+        Authenticated user:
+            Can view (view)
+        Anonymous user:
+            Cannot view
+        """
+        reject_anonymous = True
+    # Register to object_permission site like django.contrib.admin
+    site.register(Entry, EntryObjectPermHandler)
+    
 ``views.py``::
 
-	from django.views.generic import list_detail
-	from django.views.generic import create_update
-	from object_permission.decorators import permission_required
-	from models import Entry
+    from django.views.generic import ListView
+    from django.views.generic import DetailView
+    from django.views.generic import CreateView
+    from django.views.generic import UpdateView
+    from django.views.generic import DeleteView
+    from django.core.urlresolvers import reverse
 
-	def object_list(request, *args, **kwargs):
-		return list_detail.object_list(request, *args, **kwargs)
+    from object_permission.decorators import permission_required
 
-	@permission_required('blog.view_entry', Entry)
-	def object_detail(request, object_id, *args, **kwargs):
-		return list_detail.object_detail(request, object_id=object_id, *args, **kwargs)
+    from models import Entry
+    from forms import EntryForm
 
-	# actually `blog.add_entry` permission is not object permission
-	# so you have to set permission to each user in Django's admin site or whatever
-	@permission_required('blog.entry_add')
-	def create_object(request, *args, **kwargs):
-		return create_update.create_object(request, *args, **kwargs)
-	
-	@permission_required('blog.change_entry', Entry)
-	def update_object(request, object_id, *args, **kwargs):
-		return create_update.update_object(request, object_id=object_id, *args, **kwargs)
+    class EntryListView(ListView):
+        model = Entry
 
-	@permission_required('blog.delete_entry', Entry)
-	def delete_object(request, object_id, *args, **kwargs):
-		return create_update.delete_object(request, object_id=object_id, *args, **kwargs)
+    class EntryDetailView(DetailView):
+        model = Entry
+        slug_field = 'title'
+
+        @permission_required('blog.view_entry')
+        def dispatch(self, *args, **kwargs):
+            return super(EntryDetailView, self).dispatch(*args, **kwargs)
+
+    class EntryCreateView(CreateView):
+        form_class = EntryForm
+        model = Entry
+
+        @permission_required('blog.add_entry')
+        def dispatch(self, *args, **kwargs):
+            return super(EntryCreateView, self).dispatch(*args, **kwargs)
+
+    class EntryUpdateView(UpdateView):
+        form_class = EntryForm
+        model = Entry
+
+        @permission_required('blog.change_entry')
+        def dispatch(self, *args, **kwargs):
+            return super(EntryUpdateView, self).dispatch(*args, **kwargs)
+
+    class EntryDeleteView(DeleteView):
+        model = Entry
+        def get_success_url(self):
+            return reverse('blog-entry-list')
+
+        @permission_required('blog.delete_entry')
+        def dispatch(self, *args, **kwargs):
+            return super(EntryDeleteView, self).dispatch(*args, **kwargs)
 
 ``index.html``::
 
@@ -126,10 +154,38 @@ Example mini blog app
 
 Settings
 =========================================
-``OBJECT_PERMISSION_MODIFY_FUNCTION``
+``OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS``
+    A list of extra default permission for all models. Django contribute
+    'add', 'change' and 'delete' permission for all models as default.
+
+    Default: ``['view']``
+
+``OBJECT_PERMISSION_BUILTIN_TEMPLATETAGS``
+    If this is True, then ``pif`` will be builtin templatetags which mean you don't
+    need to add ``{% load object_permission_tags %}`` before use ``pif`` tag.
+
+    Default: ``True``
+
+``OBJECT_PERMISSION_AUTODISCOVER``
+    To enable autodiscover feature. object permission automatically search 'ophandler'
+    (or ``OBJECT_PERMISSION_HANDLER_MODULE_NAME``) module for each apps and load.
+
+    Default: ``True``
+
+``OBJECT_PERMISSION_HANDLER_MODULE_NAME``
+    Used for searching object permission handler module for each apps.
+
+    Default: ``'ophandler'``
+
+``OBJECT_PERMISSION_DEPRECATED``
+    If this is True then all deprecated feature is loaded. You should not turnd on
+    this unless your project is too large to do refactaring because deprecated feature 
+    is no longer supported and limited.
+
+``OBJECT_PERMISSION_MODIFY_FUNCTION`` (deprecated)
     set the name of function when object is saved for modify object permission for the object.
     the default value is ``modify_object_permission``
 
-``OBJECT_PERMISSION_MODIFY_M2M_FUNCTION``
+``OBJECT_PERMISSION_MODIFY_M2M_FUNCTION`` (deprecated)
     set the name of function when object's ManyToMany relation is updated for modify object permission
     for the object. the default value is ``modify_object_permission_m2m``
