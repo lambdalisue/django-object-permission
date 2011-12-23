@@ -81,10 +81,10 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         return kwargs
     def create_object_permission(self, obj, group):
         """create object permission"""
-        return super(GroupObjectPermission, self).create_object_permission(obj, group=group)
+        return super(GroupObjectPermissionManager, self).create_object_permission(obj, group=group)
     def get_or_create_object_permission(self, obj, group):
         """get or create object permission"""
-        return super(GroupObjectPermission, self).get_or_create_object_permission(obj, group=group)
+        return super(GroupObjectPermissionManager, self).get_or_create_object_permission(obj, group=group)
 
 class GroupObjectPermission(BaseObjectPermission):
     """
@@ -102,10 +102,10 @@ class GroupObjectPermission(BaseObjectPermission):
 class AnonymousObjectPermissionManager(BaseObjectPermissionManager):
     def create_object_permission(self, obj):
         """create object permission"""
-        return super(AnonymousObjectPermission, self).create_object_permission(obj)
+        return super(AnonymousObjectPermissionManager, self).create_object_permission(obj)
     def get_or_create_object_permission(self, obj):
         """get or create object permission"""
-        return super(AnonymousObjectPermission, self).get_or_create_object_permission(obj)
+        return super(AnonymousObjectPermissionManager, self).get_or_create_object_permission(obj)
 
 class AnonymousObjectPermission(BaseObjectPermission):
     """
@@ -126,10 +126,10 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         return kwargs
     def create_object_permission(self, obj, user):
         """create object permission"""
-        return super(UserObjectPermission, self).create_object_permission(obj, user=user)
+        return super(UserObjectPermissionManager, self).create_object_permission(obj, user=user)
     def get_or_create_object_permission(self, obj, user):
         """get or create object permission"""
-        return super(UserObjectPermission, self).get_or_create_object_permission(obj, user=user)
+        return super(UserObjectPermissionManager, self).get_or_create_object_permission(obj, user=user)
 
 class UserObjectPermission(BaseObjectPermission):
     """

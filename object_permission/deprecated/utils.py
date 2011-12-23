@@ -45,7 +45,7 @@ def generic_permission_check(queryset, perm, request, *args, **kwargs):
     Note:
         This function is deprecated because it is for Functional generic view. 
         Getting object from parameters of functional generic view does not work
-        sometimes.
+        sometimes because of the limitation.
     """
     if queryset:
         kwargs['queryset'] = queryset

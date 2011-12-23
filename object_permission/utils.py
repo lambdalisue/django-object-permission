@@ -26,20 +26,19 @@ License:
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 import time
 import datetime
-import timezone
 
 from django.http import Http404
-from django.db.models import DateTimeField
+from django.db.models.fields import DateTimeField
 from django.shortcuts import get_object_or_404
 
-def get_perm_codename(perm, obj):
+def get_perm_codename(perm):
     """get permission codename from django's standard permission format"""
     # Note:
     #   'app_label.permission_codename' is a standard permission format
 
     try:
         app, perm = perm.split('.', 1)
-    except IndexError:
+    except ValueError:
         # Non standard permission
         pass
     return perm
@@ -74,6 +73,7 @@ def _get_object_from_date_based_object_detail(
         month_format='%b', day_format='%d', object_id=None,
         slug=None, slug_field='slug', **kwargs):
     """get object from parameters passed to date_based.object_detail"""
+    from django.utils import timezone
     try:
         tt = time.strptime('%s-%s-%s' % (year, month, day), 
                             '%s-%s-%s' % ('%Y', month_format, day_format))

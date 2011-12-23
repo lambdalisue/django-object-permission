@@ -6,9 +6,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^registration/login/$', 'django.contrib.auth.views.login',
-        name='login'),
-    url(r'^registration/logout/$', 'django.contrib.auth.views.logout',
-        name='logout'),
     url(r'^', include('miniblog.blog.urls')),
+    url(r'^accounts/login/$', 'django.contrib.auth.views.login', name='login'),
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout', name='logout'),
 )

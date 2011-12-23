@@ -25,14 +25,14 @@ License:
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.conf import settings
-from django.db.models.base import ModelBase
+from django.db.models import Model
 
 class AlreadyRegistered(Exception):
     pass
 class NotRegistered(Exception):
     pass
 
-class ObjectPermHandlerManager(object):
+class ObjectPermSite(object):
     """Manager class of ObjectPermHandler"""
     def __init__(self):
         self._registry = {}
@@ -46,7 +46,7 @@ class ObjectPermHandlerManager(object):
         """
         if handler_class is None:
             handler_class = settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS
-        if isinstance(model_or_iterable, ModelBase):
+        if issubclass(model_or_iterable, Model):
             model_or_iterable = [model_or_iterable]
         for model in model_or_iterable:
             if model in self._registry:
@@ -61,7 +61,7 @@ class ObjectPermHandlerManager(object):
 
         If a model isn't already registered, this will raise NotRegistered
         """
-        if isinstance(model_or_iterable, ModelBase):
+        if issubclass(model_or_iterable, Model):
             model_or_iterable = [model_or_iterable]
         for model in model_or_iterable:
             if model not in self._registry:
@@ -69,4 +69,4 @@ class ObjectPermHandlerManager(object):
             self._registry[model].unbind()
             del self._registry[model]
 
-manager = ObjectPermHandlerManager()
+site = ObjectPermSite()

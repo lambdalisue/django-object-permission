@@ -26,7 +26,7 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from django.db.models.base import ModelBase
+from django.db.models import Model
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -48,8 +48,8 @@ class ObjectPermMediatorBase(object):
         Attribute:
             obj - a target model instance of object permission
         """
-        if not isinstance(obj, ModelBase):
-            raise AttributeError("'obj' must be an instance of Django's Model")
+        if not isinstance(obj, Model):
+            raise AttributeError("'%s' is not an instance of model" % obj)
         self._obj = obj
         self._ct = ContentType.objects.get_for_model(obj)
 
@@ -71,21 +71,22 @@ class ObjectPermMediatorBase(object):
 
     def _get_object_permission_cls(self, instance):
         """get object permission cls suite for instance"""
-        if isinstance(instance, basestring) and instance != 'anonymous':
+        ANONYMOUS = 'anonymous'
+        if isinstance(instance, basestring) and instance == ANONYMOUS:
             return AnonymousObjectPermission, {}
         elif isinstance(instance, AnonymousUser):
             return AnonymousObjectPermission, {}
         elif isinstance(instance, Group):
             return GroupObjectPermission, {'group': instance}
-        elif isinstance(instance, User) or isinstance(instance, basestring):
+        elif instance is None or isinstance(instance, User) or isinstance(instance, basestring):
             if isinstance(instance, basestring):
                 # Search from username
                 try:
                     instance = User.objects.get(username=instance)
                 except User.DoesNotExist:
-                    raise AttributeError("Unknown parameter '%s' is passed, you may mean 'anonymous'?")
+                    raise AttributeError("Unknown parameter '%s' is passed, you may mean '%s'?" % (instance, ANONYMOUS))
             return UserObjectPermission, {'user': instance}
-        raise AttributeError("Unknown parameter '%s' is passed")
+        raise AttributeError("Unknown parameter '%s' is passed" % instance)
 
     def _get_or_create_object_permission(self, instance):
         """get or create object permission suite for instance"""
@@ -103,7 +104,7 @@ class ObjectPermMediatorBase(object):
         if not hasattr(instance_or_iterable, '__iter__'):
             instance_or_iterable = [instance_or_iterable]
         for instance in instance_or_iterable:
-            object_permission = self._get_or_create_object_permission(self._obj. instance)
+            object_permission = self._get_or_create_object_permission(instance)
             object_permission.permissions.clear()
 
     def contribute(self, instance_or_iterable, permissions=[]):
@@ -124,8 +125,7 @@ class ObjectPermMediatorBase(object):
             object_permission = self._get_or_create_object_permission(instance)
             for perm in permissions:
                 permission = self._get_or_create_permission(perm)
-                object_permission.add(permission)
-            yield object_permission
+                object_permission.permissions.add(permission)
 
     def discontribute(self, instance_or_iterable, permissions=[]):
         """discontribute permissions of obj to instance(s)
@@ -145,8 +145,7 @@ class ObjectPermMediatorBase(object):
             object_permission = self._get_or_create_object_permission(instance)
             for perm in permissions:
                 permission = self._get_or_create_permission(perm)
-                object_permission.remove(permission)
-            yield object_permission
+                object_permission.permissions.remove(permission)
 
 class ObjectPermMediator(ObjectPermMediatorBase):
     """Mediator class for object permission"""
@@ -156,19 +155,19 @@ class ObjectPermMediator(ObjectPermMediatorBase):
         self.clear(instance_or_iterable)
         self.contribute(instance_or_iterable, permissions)
 
-    def reject(self, instance_or_iterable, extra_permissions):
+    def reject(self, instance_or_iterable, extra_permissions=[]):
         """reject all management permission (view, change, delete)"""
         permissions = []
         self._contribute(instance_or_iterable, permissions, extra_permissions)
-    def viewer(self, instance_or_iterable, extra_permissions):
+    def viewer(self, instance_or_iterable, extra_permissions=[]):
         """can view"""
         permissions = ['view']
         self._contribute(instance_or_iterable, permissions, extra_permissions)
-    def ediinstance_or_iterabler(self, instance_or_iterable, extra_permissions):
+    def ediinstance_or_iterabler(self, instance_or_iterable, extra_permissions=[]):
         """can view and change"""
         permissions = ['view', 'change']
         self._contribute(instance_or_iterable, permissions, extra_permissions)
-    def manager(self, instance_or_iterable, extra_permissions):
+    def manager(self, instance_or_iterable, extra_permissions=[]):
         """can view, change and delete"""
         permissions = ['view', 'change', 'delete']
         self._contribute(instance_or_iterable, permissions, extra_permissions)

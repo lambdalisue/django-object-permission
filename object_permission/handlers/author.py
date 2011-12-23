@@ -44,6 +44,17 @@ class AuthorObjectPermHandler(ObjectPermHandlerBase):
     author_field = 'author'
     reject_anonymous = False
 
+    def __del__(self):
+        self.deleted()
+
+    def unbind(self):
+        super(AuthorObjectPermHandler, self).unbind()
+        # Remove watcher
+        self._author_field_watcher.unwatch()
+
+    def get_author(self):
+        return getattr(self.obj, self.author_field)
+
     def created(self):
         # Watch author change
         self._author_field_watcher = \
@@ -53,7 +64,7 @@ class AuthorObjectPermHandler(ObjectPermHandlerBase):
 
     def updated(self):
         # Author has full access
-        self.mediator.manager(getattr(self.obj, self.author_field))
+        self.mediator.manager(self.get_author())
         # Authenticated user can view
         self.mediator.viewer(None)
         if self.reject_anonymous:

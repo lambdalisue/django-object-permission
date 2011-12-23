@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-Extra settings for object-permissions
+Object permission handler module
 
 
 AUTHOR:
@@ -24,14 +24,12 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from django.conf import settings
+from object_permission import site
+from object_permission.handlers.author import AuthorObjectPermHandler
 
-def set_default(name, value):
-    setattr(settings, name, getattr(settings, name, value))
+from models import Entry
 
-set_default(
-    'OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS', 
-    'object_permission.handlers.authenticated.AuthenticatedObjectPermHandler')
-set_default('OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS', ['view'])
-set_default('OBJECT_PERMISSION_BUILTIN_TAGS', True)
-set_default('OBJECT_PERMISSION_AUTODISCOVER', True)
+class EntryObjectPermHandler(AuthorObjectPermHandler):
+    author_field = 'author'
+    reject_anonymous = True
+site.register(Entry, EntryObjectPermHandler)

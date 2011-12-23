@@ -45,3 +45,6 @@ def load_handler_class(path):
 if isinstance(settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS, basestring):
     settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS = \
             load_handler_class(settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS)
+
+from base import ObjectPermHandlerBase
+from authenticated import AuthenticatedObjectPermHandler

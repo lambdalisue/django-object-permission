@@ -30,7 +30,6 @@ from django.views.generic import CreateView
 from django.views.generic import UpdateView
 from django.views.generic import DeleteView
 from django.core.urlresolvers import reverse
-from django.utils.decorators import method_decorator
 
 from object_permission.decorators import permission_required
 
@@ -40,38 +39,35 @@ from forms import EntryForm
 class EntryListView(ListView):
     model = Entry
 
-
 class EntryDetailView(DetailView):
     model = Entry
     slug_field = 'title'
 
-    @method_decorator(permission_required('blog.view_entry', Entry))
+    @permission_required('blog.view_entry')
     def dispatch(self, *args, **kwargs):
-        super(EntryDetailView, self).dispatch(*args, **kwargs)
+        return super(EntryDetailView, self).dispatch(*args, **kwargs)
 
 class EntryCreateView(CreateView):
     form_class = EntryForm
     model = Entry
 
-    @method_decorator(permission_required('blog.add_entry', Entry))
+    @permission_required('blog.add_entry')
     def dispatch(self, *args, **kwargs):
-        super(EntryCreateView, self).dispatch(*args, **kwargs)
+        return super(EntryCreateView, self).dispatch(*args, **kwargs)
 
 class EntryUpdateView(UpdateView):
     form_class = EntryForm
     model = Entry
 
-    @method_decorator(permission_required('blog.change_entry', Entry))
+    @permission_required('blog.change_entry')
     def dispatch(self, *args, **kwargs):
-        super(EntryUpdateView, self).dispatch(*args, **kwargs)
+        return super(EntryUpdateView, self).dispatch(*args, **kwargs)
 
 class EntryDeleteView(DeleteView):
     model = Entry
     def get_success_url(self):
         return reverse('blog-entry-list')
 
-    @method_decorator(permission_required('blog.delete_entry', Entry))
+    @permission_required('blog.delete_entry')
     def dispatch(self, *args, **kwargs):
-        super(EntryDeleteView, self).dispatch(*args, **kwargs)
-
-
+        return super(EntryDeleteView, self).dispatch(*args, **kwargs)

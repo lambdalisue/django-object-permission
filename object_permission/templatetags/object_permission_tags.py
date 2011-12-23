@@ -39,7 +39,8 @@ from django.template.defaulttags import TemplateLiteral
 register = template.Library()
 
 OPERATORS = dict(_OPERATORS,
-    of=infix(10, lambda context, x, y: template.resolve_variable('request', context).user.has_perm(x.eval(context), y.eval(context)))
+    of=infix(10, lambda context, x, y: 
+        template.resolve_variable('request', context).user.has_perm(x.eval(context), y.eval(context)))
 )
 
 class ObjectPermissionIfParser(IfParser):

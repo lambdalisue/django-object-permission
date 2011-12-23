@@ -31,7 +31,7 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from django.db.models.base import ModelBase
+from django.db.models import Model
 from django.contrib.contenttypes.models import ContentType
 
 from models import UserObjectPermission
@@ -86,11 +86,11 @@ class ObjectPermBackend(object):
 
     def has_perm(self, user_obj, perm, obj=None):
         """check permission of obj for user_obj"""
-        if obj is None or not isinstance(obj, ModelBase):
+        if obj is None or not isinstance(obj, Model):
             # This is object permission backend so don't touch if obj is None
             return False
         
-        perm_codename = get_perm_codename(perm, obj)
+        perm_codename = get_perm_codename(perm)
             
         if user_obj.is_authenticated():
             # check user_obj specific permissions

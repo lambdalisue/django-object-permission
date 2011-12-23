@@ -28,63 +28,181 @@ from django.test import TestCase
 from ..models import Entry
 
 class EntryViewTestCase(TestCase):
-    fixtures = ['test.yaml']
+    fixtures = ['test_user.yaml', 'test_entry.yaml']
+
+    def tearDown(self):
+        # This test (blog.entry) use watcher so remove all wathcher everytime
+        from observer import unwatch_all
+        unwatch_all()
 
     def test_list_get(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
 
     def test_detail_get(self):
+        # Anonymous user doesn't have view permission
+        response = self.client.get('/foo/')
+        self.assertRedirects(response, '/accounts/login/?next=/foo/')
+
+        # Authenticated user has view permission
+        assert self.client.login(username='foo', password='password')
         response = self.client.get('/foo/')
         self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
     def test_detail_get_invalid(self):
+        # Permission doesn't affect object which doesn't exist
         response = self.client.get('/unknown/')
         self.assertEqual(response.status_code, 404)
 
     def test_create_get(self):
         response = self.client.get('/create/')
+        # Anonymous user doesn't have create permission
+        self.assertRedirects(response, '/accounts/login/?next=/create/')
+    
+        # Authenticated user has add permission
+        assert self.client.login(username='foo', password='password')
+        response = self.client.get('/create/')
         self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
     def test_create_post(self):
+        # Anonymous user doesn't have add permission
+        response = self.client.post('/create/', {
+                'title': 'foobar', 'body': 'foobar'
+            })
+        self.assertRedirects(response, '/accounts/login/?next=/create/')
+        
+        # Authenticated user has add permission
+        assert self.client.login(username='foo', password='password')
         response = self.client.post('/create/', {
                 'title': 'foobar', 'body': 'foobar'
             })
         self.assertEqual(response.status_code, 302)
         assert Entry.objects.filter(title='foobar').exists()
+        self.client.logout()
+
     def test_create_post_invalid(self):
+        assert self.client.login(username='foo', password='password')
         response = self.client.post('/create/', {
                 'title': '', 'body': ''
             })
         self.assertEqual(response.status_code, 200)
         assert 'This field is required' in response.content
-
+        self.client.logout()
 
     def test_update_get(self):
-        response = self.client.get('/update/1/')
+        # Anonymous user doesn't have change permission
+        response = self.client.get('/update/2/')
+        self.assertRedirects(response, '/accounts/login/?next=/update/2/')
+
+        # Non author user doesn't have change permission
+        assert self.client.login(username='bar', password='password')
+        response = self.client.get('/update/2/')
+        self.assertEqual(response.status_code, 403)
+
+        # Author has change permission
+        assert self.client.login(username='foo', password='password')
+        response = self.client.get('/update/2/')
         self.assertEqual(response.status_code, 200)
+
+        # superuser has all permissions
+        assert self.client.login(username='admin', password='password')
+        response = self.client.get('/update/2/')
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
     def test_update_get_invalid(self):
+        # Permission doesn't affect object which doesn't exist
         response = self.client.get('/update/999/')
         self.assertEqual(response.status_code, 404)
+
     def test_update_post(self):
-        response = self.client.post('/update/1/', {
+        # Anonymous user doesn't have change permission
+        response = self.client.post('/update/2/', {
+                'title': 'foobar', 'body': 'foobar'
+            })
+        self.assertRedirects(response, '/accounts/login/?next=/update/2/')
+
+        # Non author user doesn't have change permission
+        assert self.client.login(username='bar', password='password')
+        response = self.client.post('/update/2/', {
+                'title': 'foobar', 'body': 'foobar'
+            })
+        self.assertEqual(response.status_code, 403)
+
+        # Author user has change permission
+        assert self.client.login(username='foo', password='password')
+        response = self.client.post('/update/2/', {
                 'title': 'foobar', 'body': 'foobar'
             })
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(Entry.objects.get(pk=1).title, 'foobar')
-        self.assertEqual(Entry.objects.get(pk=1).body, 'foobar')
+        self.assertEqual(Entry.objects.get(pk=2).title, 'foobar')
+        self.assertEqual(Entry.objects.get(pk=2).body, 'foobar')
+
+        # superuser has all permissions
+        assert self.client.login(username='admin', password='password')
+        response = self.client.post('/update/2/', {
+                'title': 'foobar2', 'body': 'foobar2'
+            })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Entry.objects.get(pk=2).title, 'foobar2')
+        self.assertEqual(Entry.objects.get(pk=2).body, 'foobar2')
+        self.client.logout()
+
     def test_update_post_invalid(self):
-        response = self.client.post('/update/1/', {
+        assert self.client.login(username='foo', password='password')
+        response = self.client.post('/update/2/', {
                 'title': '', 'body': ''
             })
         self.assertEqual(response.status_code, 200)
         assert 'This field is required' in response.content
+        self.client.logout()
 
     def test_delete_get(self):
-        response = self.client.get('/delete/1/')
+        # Anonymous user doesn't have delete permission
+        response = self.client.get('/delete/2/')
+        self.assertRedirects(response, '/accounts/login/?next=/delete/2/')
+
+        # Non author user doesn't have delete permission
+        assert self.client.login(username='bar', password='password')
+        response = self.client.get('/delete/2/')
+        self.assertEqual(response.status_code, 403)
+
+        # Author user have delete permission
+        assert self.client.login(username='foo', password='password')
+        response = self.client.get('/delete/2/')
         self.assertEqual(response.status_code, 200)
+
+        # superuser have all permissions
+        assert self.client.login(username='admin', password='password')
+        response = self.client.get('/delete/2/')
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
     def test_delete_get_invalid(self):
         response = self.client.get('/delete/999/')
         self.assertEqual(response.status_code, 404)
+
     def test_delete_post(self):
-        response = self.client.post('/delete/1/')
+        # Anonymous user doesn't have delete permission
+        response = self.client.post('/delete/2/')
+        self.assertRedirects(response, '/accounts/login/?next=/delete/2/')
+
+        # Non author user doesn't have delete permission
+        assert self.client.login(username='bar', password='password')
+        response = self.client.post('/delete/2/')
+        self.assertEqual(response.status_code, 403)
+
+        # Author user has delete permission
+        assert self.client.login(username='foo', password='password')
+        response = self.client.post('/delete/2/')
         self.assertEqual(response.status_code, 302)
-        assert not Entry.objects.filter(pk=1).exists()
+        assert not Entry.objects.filter(pk=2).exists()
+
+        # superuser has all permissions
+        assert self.client.login(username='admin', password='password')
+        response = self.client.post('/delete/3/')
+        self.assertEqual(response.status_code, 302)
+        assert not Entry.objects.filter(pk=3).exists()
+        self.client.logout()
