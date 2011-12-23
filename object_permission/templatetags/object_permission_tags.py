@@ -93,7 +93,7 @@ class IfNode(Node):
 @register.tag('ifhsp')
 def do_ifhsp(parser, token):
     warnings.warn('deprecated. use `pif` insted', DeprecationWarning)
-    return do_ifhsp(parser, token)
+    return do_if(parser, token)
 @register.tag('pif')
 def do_if(parser, token):
     """

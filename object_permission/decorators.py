@@ -25,7 +25,7 @@ License:
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.http import HttpResponseForbidden
-from django.db.models import Model
+from django.db.models.base import ModelBase
 from django.contrib.auth.views import redirect_to_login
 
 from utils import generic_permission_check
@@ -58,7 +58,7 @@ def permission_required(perm, queryset=None):
     """
     def wrapper(fn):
         def inner(request, *args, **kwargs):
-            if queryset and issubclass(queryset, Model):
+            if queryset and issubclass(queryset, ModelBase):
                 qs = queryset.objects.all()
             else:
                 qs = queryset
@@ -70,10 +70,3 @@ def permission_required(perm, queryset=None):
             return fn(request, *args, **kwargs)
         return inner
     return wrapper
-
-# Deprecation Function
-import warnings
-def permission_check(perm, queryset=None):
-    warnings.warn(
-        "deprecated. use `permission_required` insted", DeprecationWarning)
-    return permission_required(perm, queryset)

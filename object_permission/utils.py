@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-utilities of django-object-permission
+utilities of object-permission
 
 
 AUTHOR:
@@ -24,62 +24,83 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+import time
+import datetime
+import timezone
+
+from django.http import Http404
+from django.db.models import DateTimeField
 from django.shortcuts import get_object_or_404
 
-def generic_permission_check(queryset, perm, request, *args, **kwargs):
-    """
-    Generic permission check
+def get_perm_codename(perm, obj):
+    """get permission codename from django's standard permission format"""
+    # Note:
+    #   'app_label.permission_codename' is a standard permission format
 
-    useful to create custom permission_required decorator. DO NOT create your
-    own permission_required while ``permission_required`` decorator is exsits
-    at ``object_permission.decorators``
-    
-    Arguments:
-        queryset    - queryset of object
-        perm        - permission string
-        request     - HttpRequest
-        *args       - *args for view function
-        **kwargs    - **kwargs for view function
-    
-    Example:
-    >>> from django.http import HttpResponseForbidden
-    >>> from django.views.generic import list_detail
-    >>> from object_permission.utils import generic_permission_check
-    >>> 
-    >>> def permission_required(perm, model):
-    ...     def wrapper(fn):
-    ...         def inner(request, *args, **kwargs):
-    ...             # Filtering queryset with `author`
-    ...             queryset = model.objects.filter(author=kwargs['author'])
-    ...             if not generic_permission_check(queryset, perm, request, *args, **kwargs):
-    ...                 return HttpResponseForbidden()
-    ...             return fn(request, *args, **kwargs)
-    ...         return inner
-    ...     return wrapper
-    >>> 
-    >>> @permission_required('blogs.view_blog', Entry)
-    >>> def object_detail(request, *args, **kwargs):
-    ...     kwargs['queryset'] = kwargs['queryset'].filter(author__username=kwargs['author'])
-    ...     return list_detail.object_list(request, *args, **kwargs)
-    
-    """
-    if queryset is None:
-        return request.user.has_perm(perm)
-    if 'year' in kwargs and 'month' in kwargs and 'day' in kwargs and 'slug' in kwargs:
-        obj = get_object_or_404(queryset,
-            publish_at__year=kwargs['year'],
-            publish_at__month=kwargs['month'],
-            publish_at__day=kwargs['day'],
-            title=kwargs['slug'])
-    elif 'object_id' in kwargs:
-        # For method based generic view
-        obj = get_object_or_404(queryset, pk=kwargs['object_id'])
-    elif 'pk' in kwargs:
-        # For class based generic view
-        obj = get_object_or_404(queryset, pk=kwargs['pk'])
-    elif 'slug' in kwargs:
-        slug_field = kwargs.get('slug_field', 'slug')
-        obj = get_object_or_404(queryset, **{slug_field: kwargs['slug']})
+    try:
+        app, perm = perm.split('.', 1)
+    except IndexError:
+        # Non standard permission
+        pass
+    return perm
+
+def get_perm_codename_with_suffix(perm, obj):
+    """get permission codename suffix"""
+    perm_codename = get_perm_codename(perm)
+    if hasattr(obj, 'object_permission_suffix'):
+        suffix = getattr(obj, 'object_permission_suffix')
     else:
-        return request.user.has_perm(perm)
-    return request.user.has_perm(perm, obj)
+        suffix = "_%s" % obj.__class__.__name__.lower()
+    if perm_codename.endswith(suffix):
+        return perm_codename
+    return perm_codename + suffix
+    
+def _get_object_from_list_detail_object_detail(
+        request, queryset, object_id=None, slug=None, 
+        slug_field='slug', *args, **kwargs):
+    """get object from parameters passed to list_detail.object_detail"""
+    if object_id:
+        obj = get_object_or_404(queryset, pk=object_id)
+    elif slug and slug_field:
+        obj = get_object_or_404(queryset, **{slug_field: slug})
+    else:
+        raise AttributeError(
+                "Generic detail view must be called with either an "
+                "object_id or a slug/slug_field.")
+    return obj
+
+def _get_object_from_date_based_object_detail(
+        request, year, month, day, queryset, date_field,
+        month_format='%b', day_format='%d', object_id=None,
+        slug=None, slug_field='slug', **kwargs):
+    """get object from parameters passed to date_based.object_detail"""
+    try:
+        tt = time.strptime('%s-%s-%s' % (year, month, day), 
+                            '%s-%s-%s' % ('%Y', month_format, day_format))
+        date = datetime.date(*tt[:3])
+    except ValueError:
+        raise Http404
+
+    model = queryset.model
+    now = timezone.now()
+
+    if isinstance(model._meta.get_field(date_field), DateTimeField):
+        lookup_kwargs = {
+                '%s__range' % date_field: (
+                    datetime.datetime.combine(date, datetime.time.min),
+                    datetime.datetime.combine(date, datetime.time.max)
+                )}
+    else:
+        lookup_kwargs = {date_field: date}
+
+    if date >= now.date() and not kwargs.get('allow_future', False):
+        lookup_kwargs['%s__lte' % date_field] = now
+    if object_id:
+        lookup_kwargs['pk'] = object_id
+    elif slug and slug_field:
+        lookup_kwargs['%s__exact' % slug_field] = slug
+    else:
+        raise AttributeError(
+                "Generic detail view must be called with either an "
+                "object_id or a slug/slug_field.")
+    return get_object_or_404(queryset, **lookup_kwargs)

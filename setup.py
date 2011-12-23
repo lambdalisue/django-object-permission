@@ -35,5 +35,6 @@ setup(
     install_requires=[
         'setuptools',
         'django>=1.2',
+        'django-observer',
         ],
 )
