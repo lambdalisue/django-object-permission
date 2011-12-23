@@ -39,7 +39,8 @@ from django.template.defaulttags import TemplateLiteral
 register = template.Library()
 
 OPERATORS = dict(_OPERATORS,
-    of=infix(10, lambda context, x, y: template.resolve_variable('request', context).user.has_perm(x.eval(context), y.eval(context)))
+    of=infix(10, lambda context, x, y: 
+        template.resolve_variable('request', context).user.has_perm(x.eval(context), y.eval(context)))
 )
 
 class ObjectPermissionIfParser(IfParser):
@@ -93,7 +94,7 @@ class IfNode(Node):
 @register.tag('ifhsp')
 def do_ifhsp(parser, token):
     warnings.warn('deprecated. use `pif` insted', DeprecationWarning)
-    return do_ifhsp(parser, token)
+    return do_if(parser, token)
 @register.tag('pif')
 def do_if(parser, token):
     """

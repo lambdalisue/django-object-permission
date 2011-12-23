@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-Unittest module of models of object-permission
+Mini blog urls
 
 
 AUTHOR:
@@ -24,25 +24,18 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from django.contrib.auth.models import User
-from django.contrib.auth.models import Group
-from django.contrib.flatpages.models import FlatPage
-from django.contrib.contenttypes.models import ContentType
+from django.conf.urls.defaults import patterns, url
 
-from base import TestCase
-from ..models import GroupObjectPermissin
+import views
 
-class GroupObjectPermissionTest(TestCase):
-    fixtures = ['test.yaml']
-
-    def test_000_creation(self):
-        """object_permission.GroupObjectPermission: creation works correctly"""
-        ct = ContentType.objects.get(pk=1)
-        group = Group.objects.get(pk=1)
-        instance = GroupObjectPermission.objects.create(
-                content_type=ct,
-                object_id=1,
-                
-
-
-
+urlpatterns = patterns('',
+    url(r'^$', views.EntryListView.as_view(), name='blog-entry-list'),
+    url(r'^create/$', views.EntryCreateView.as_view(), 
+        name='blog-entry-create'),
+    url(r'^update/(?P<pk>\d+)/$', views.EntryUpdateView.as_view(), 
+        name='blog-entry-update'),
+    url(r'^delete/(?P<pk>\d+)/$', views.EntryDeleteView.as_view(), 
+        name='blog-entry-delete'),
+    url(r'^(?P<slug>[^/]+)/$', views.EntryDetailView.as_view(), 
+        name='blog-entry-detail'),
+)

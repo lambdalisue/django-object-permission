@@ -6,7 +6,7 @@
 #
 from setuptools import setup, find_packages
 
-version = "0.1rc7"
+version = "0.2rc1"
 
 def read(filename):
     import os.path
@@ -14,7 +14,7 @@ def read(filename):
 setup(
     name="django-object-permission",
     version=version,
-    description = "Django's object permission library",
+    description = "Add object specific permission for particualr User/Group, All authenticated user or Anonymous user",
     long_description=read('README.rst'),
     classifiers = [
         'Framework :: Django',
@@ -34,5 +34,6 @@ setup(
     zip_safe = True,
     install_requires=[
         'setuptools',
+        'django>=1.3',
         ],
 )

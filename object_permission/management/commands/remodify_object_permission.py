@@ -8,23 +8,22 @@ Django 1.2 template tag that supports {% elif %} branches and
 
 
 AUTHOR:
-    lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
-    
+lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
 Copyright:
-    Copyright 2011 Alisue allright reserved.
+Copyright 2011 Alisue allright reserved.
 
 License:
-    Licensed under the Apache License, Version 2.0 (the "License"); 
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
-    Unliss required by applicable law or agreed to in writing, software
-    distributed under the License is distrubuted on an "AS IS" BASICS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+Unliss required by applicable law or agreed to in writing, software
+distributed under the License is distrubuted on an "AS IS" BASICS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.conf import settings
@@ -33,11 +32,19 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ImproperlyConfigured
 
-from ...mediators import ObjectPermissionMediator
+from ...deprecated.mediators import ObjectPermissionMediator
 
 class Command(BaseCommand):
     help = ("""Remodify object_permission of each model using model's """
             """`modify_object_permission(self, mediator, created)` function.""")
+
+    def __init__(self, *args, **kwargs):
+        import warnings
+        warnings.warn(
+                'deprecated: this command is deperecated. '
+                'with new object-permission storategy, the command no '
+                'longer required', DeprecationWarning)
+        super(Command, self).__init__(*args, **kwargs)
 
     def handle(self, *app_labels, **options):
         from django.db import models
@@ -45,7 +52,7 @@ class Command(BaseCommand):
             output = [self.handle_noargs(**options)]
         else:
             try:
-                app_list = [models.get_app(app_label) 
+                app_list = [models.get_app(app_label)
                         for app_label in app_labels]
             except (ImproperlyConfigured, ImportError), e:
                 raise CommandError(
@@ -60,9 +67,9 @@ class Command(BaseCommand):
     
     def handle_app(self, app, **options):
         """
-        Remodify object_permission of each model using model's 
-        `modify_object_permission(self, mediator, created)` function.
-        """
+Remodify object_permission of each model using model's
+`modify_object_permission(self, mediator, created)` function.
+"""
         output = []
         model_list = get_models(app)
         for model in model_list:
@@ -103,12 +110,12 @@ class Command(BaseCommand):
                     for field in obj._meta.many_to_many:
                         sender = field.rel.through
                         model = field.rel.to
-                        pk_set = [to.pk 
+                        pk_set = [to.pk
                                 for to in getattr(obj, field.attname).all()]
                         fn_m2m(mediator=ObjectPermissionMediator, sender=sender,
                                model=model, pk_set=pk_set, removed=False)
             if options['verbosity'] != '0':
                 output.append(
-                    """Modified: %s's object_permission has remodified (%d)""" 
+                    """Modified: %s's object_permission has remodified (%d)"""
                     % (model, count))
         return "\n".join(output)

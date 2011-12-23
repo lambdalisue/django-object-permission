@@ -30,50 +30,98 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-import warnings
-
 from django.conf import settings
-from django.db.models.signals import post_save
-from django.db.models.signals import m2m_changed
+from django.db.models import get_models, signals
+from django.contrib.auth.management import _get_permission_codename
+from django.core.exceptions import ImproperlyConfigured
 
-from mediators import ObjectPermissionMediator
+app_label = 'object_permission'
+def set_default(name, value):
+    setattr(settings, name, getattr(settings, name, value))
 
-__ALL__ = ['ObjectPermissionMediator']
+# Validate settings
+if "%s.backends.ObjectPermBackend" % app_label not in settings.AUTHENTICATION_BACKENDS:
+    raise ImproperlyConfigured("You have to set '%s.backends.ObjectPermBackend' to AUTHENTICATION_BACKENDS" % app_label)
 
-# Set defaut settings
-settings.OBJECT_PERMISSION_WARN = getattr(
-        settings, 'OBJECT_PERMISSION_WARN', True)
-settings.OBJECT_PERMISSION_BUILTIN_TEMPLATETAG = getattr(
-        settings, 'OBJECT_PERMISSION_BUILTIN_TEMPLATETAG', True)
-settings.OBJECT_PERMISSION_MODIFY_FUNCTION = getattr(
-        settings, 'OBJECT_PERMISSION_MODIFY_FUNCTION', 
-        'modify_object_permission')
-settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION = getattr(
-        settings, 'OBJECT_PERMISSION_MODIFY_M2M_FUNCTION', 
-        'modify_object_permission_m2m')
+# Set default settings
+set_default(
+    'OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS', 
+    'object_permission.handlers.authenticated.AuthenticatedObjectPermHandler')
+set_default('OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS', ['view'])
+set_default('OBJECT_PERMISSION_BUILTIN_TEMPLATETAGS', True)
+set_default('OBJECT_PERMISSION_AUTODISCOVER', True)
+set_default('OBJECT_PERMISSION_HANDLER_MODULE_NAME', 'ophandler')
+set_default('OBJECT_PERMISSION_DEPRECATED', False)
 
-# Check required settings
-if not hasattr(settings, 'AUTHENTICATION_BACKENDS'):
-    raise Exception(
-            """You must define 'AUTHENTICATION_BACKENDS' in settings.py""")
-elif ('object_permission.backends.ObjectPermBackend' not in
-        settings.AUTHENTICATION_BACKENDS and settings.OBJECT_PERMISSION_WARN):
-    warnings.warn(
-            """required ObjectPermBackend is not in AUTHENTICATION_BACKENDS""")
+# Load site (this must be after the default settings has complete)
+from sites import site
 
 # Regist templatetags for ObjectPermission
-if settings.OBJECT_PERMISSION_BUILTIN_TEMPLATETAG:
+if settings.OBJECT_PERMISSION_BUILTIN_TEMPLATETAGS:
     from django.template import add_to_builtins
-    add_to_builtins('object_permission.templatetags.object_permission_tags')
+    add_to_builtins('%s.templatetags.object_permission_tags' % app_label)
 
-# Automatically call `modify_permission` of all model
-def _post_save_callback(sender, instance, created, **kwargs):
-    if hasattr(instance, settings.OBJECT_PERMISSION_MODIFY_FUNCTION):
-        fn = getattr(instance, settings.OBJECT_PERMISSION_MODIFY_FUNCTION)
-        fn(mediator=ObjectPermissionMediator, created=created)
-def _m2m_changed_callback(sender, instance, action, reverse, model, pk_set, **kwargs):
-    if action in ('post_add', 'post_remove') and hasattr(instance, settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION):
-        fn = getattr(instance, settings.OBJECT_PERMISSION_MODIFY_M2M_FUNCTION)
-        fn(mediator=ObjectPermissionMediator, sender=sender, model=model, pk_set=pk_set, removed=action == 'post_remove')
-post_save.connect(_post_save_callback)
-m2m_changed.connect(_m2m_changed_callback)
+# Add extra default permission
+def _get_all_permissions(opts):
+    "Returns (codename, name) for all permissions in the given opts."
+    perms = []
+    for action in settings.OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS:
+        perms.append((_get_permission_codename(action, opts), u'Can %s %s' % (action, opts.verbose_name_raw)))
+    return perms + list(opts.permissions)
+def create_permissions(app, created_models, verbosity, **kwargs):
+    from django.contrib.contenttypes.models import ContentType
+    from django.contrib.auth.models import Permission
+    app_models = get_models(app)
+    if not app_models:
+        return
+    for klass in app_models:
+        ctype = ContentType.objects.get_for_model(klass)
+        for codename, name in _get_all_permissions(klass._meta):
+            p, created = Permission.objects.get_or_create(codename=codename, content_type__pk=ctype.id,
+                defaults={'name': name, 'content_type': ctype})
+            if created and verbosity >= 2:
+                print "Adding permission '%s'" % p
+signals.post_syncdb.connect(create_permissions,
+    dispatch_uid = "object_permission.management.create_permissions")
+
+def autodiscover():
+    """
+    Auto-discover INSTALLED_APPS ophandler.py modules and fail silently when
+    not present. This forces an import on them to register any handler bits they
+    may want.
+    """
+    import copy
+    from django.conf import settings
+    from django.utils.importlib import import_module
+    from django.utils.module_loading import module_has_submodule
+
+    handler_module_name = settings.OBJECT_PERMISSION_HANDLER_MODULE_NAME
+
+    for app in settings.INSTALLED_APPS:
+        mod = import_module(app)
+        # Attempt to import the app's object permission handler module.
+        try:
+            before_import_registry = copy.copy(site._registry)
+            import_module('%s.%s' % (app, handler_module_name))
+        except:
+            # Reset the model registry to the state before the last import as
+            # this import will have to reoccur on the next request and this
+            # could raise NotRegistered and AlreadyRegistered exceptions
+            site._registry = before_import_registry
+
+            # Decide wheter to bubble up this error. If the app just
+            # doesn't have an object permission module, we can ignore the error
+            # attempting to import it, otherwise we want it to bubble up.
+            if module_has_submodule(mod, handler_module_name):
+                raise
+if settings.OBJECT_PERMISSION_AUTODISCOVER:
+    autodiscover()
+
+if settings.OBJECT_PERMISSION_DEPRECATED:
+    import warnings
+    warnings.warn('deperecated future turnd on. you should turn off it with "OBJECT_PERMISSION_DEPRECATED"', DeprecationWarning)
+    from deprecated.modify_object_permission import *
+    from deprecated.mediators import ObjectPermissionMediator
+    from deprecated.utils import generic_permission_check
+    import utils
+    utils.generic_permission_check = generic_permission_check

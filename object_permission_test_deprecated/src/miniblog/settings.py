@@ -14,7 +14,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'database.db',                      
+        'NAME': os.path.join(ROOT, 'database.db'),
         'USER': '',                      
         'PASSWORD': '',                  
         'HOST': '',                      
@@ -74,6 +74,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(ROOT, 'static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -85,7 +86,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '4et6(22#@lgie4wogk)6um6^klpkk0!z-l%uj&kvs*u2xrvfj%'
+SECRET_KEY = '4et6(22#@lgie4wogk)6um6^jklpkk0!z-l%uj&kvs*u2xrvfj%'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -100,9 +101,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'author.middlewares.AuthorDefaultBackendMiddleware',
 )
 
-ROOT_URLCONF = 'weblog.urls'
+ROOT_URLCONF = 'miniblog.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -119,8 +121,25 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'django.contrib.flatpages',     # This is required to run object-permission tests
+    'author',
     'object_permission',
+    'miniblog.autocmd',
+    'miniblog.blog',
 )
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'object_permission.backends.ObjectPermBackend',     # This is required
+)
+
+FIXTURE_DIRS = (
+    os.path.join(ROOT, 'fixtures'),
+)
+
+LOGIN_REDIRECT_URL = '/'
+
+OBJECT_PERMISSION_DEPRECATED = True
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
