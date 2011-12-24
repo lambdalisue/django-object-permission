@@ -42,6 +42,9 @@ class ObjectPermissionTestCaseBase(AppTestCase):
                 _middleware_classes.append(middleware_class)
         settings.MIDDLEWARE_CLASSES = _middleware_classes
         super(ObjectPermissionTestCaseBase, self)._pre_setup()
+        # run autodiscover
+        from .. import autodiscover
+        autodiscover()
     def _post_teardown(self):
         super(ObjectPermissionTestCaseBase, self)._post_teardown()
         settings.MIDDLEWARE_CLASSES = self._original_middleware_classes

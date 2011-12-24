@@ -44,9 +44,6 @@ class AuthorObjectPermHandler(ObjectPermHandlerBase):
     author_field = 'author'
     reject_anonymous = False
 
-    def __del__(self):
-        self.deleted()
-
     def unbind(self):
         super(AuthorObjectPermHandler, self).unbind()
         # Remove watcher

@@ -169,7 +169,7 @@ class ObjectPermMediator(ObjectPermMediatorBase):
         """can view"""
         permissions = ['view']
         self._contribute(instance_or_iterable, permissions, extra_permissions)
-    def ediinstance_or_iterabler(self, instance_or_iterable, extra_permissions=[]):
+    def editor(self, instance_or_iterable, extra_permissions=[]):
         """can view and change"""
         permissions = ['view', 'change']
         self._contribute(instance_or_iterable, permissions, extra_permissions)
