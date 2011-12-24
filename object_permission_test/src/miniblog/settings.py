@@ -121,7 +121,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'django.contrib.flatpages',     # This is required to run object-permission tests
     'author',
     'object_permission',
     'miniblog.autocmd',
