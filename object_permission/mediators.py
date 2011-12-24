@@ -39,6 +39,15 @@ from models import AnonymousObjectPermission
 from utils import get_perm_codename
 from utils import get_perm_codename_with_suffix
 
+def get_iterable_instances(instance_or_iterable):
+    """get iterable instances from instance_or_iterable"""
+    from django.db import models
+    if isinstance(instance_or_iterable, models.Manager):
+        instance_or_iterable = instance_or_iterable.iterator()
+    elif not hasattr(instance_or_iterable, '__iter__'):
+        instance_or_iterable = [instance_or_iterable]
+    return instance_or_iterable
+
 class ObjectPermMediatorBase(object):
     """Base Mediator for object-permission"""
 
@@ -95,14 +104,13 @@ class ObjectPermMediatorBase(object):
 
     def reset(self):
         """reset all permissions of obj"""
-        AnonymousObjectPermission.objects.get_for_model(self._obj).remove()
-        GroupObjectPermission.objects.get_for_model(self._obj).remove()
-        UserObjectPermission.objects.get_for_model(self._obj).remove()
+        AnonymousObjectPermission.objects.get_for_model(self._obj).delete()
+        GroupObjectPermission.objects.get_for_model(self._obj).delete()
+        UserObjectPermission.objects.get_for_model(self._obj).delete()
 
     def clear(self, instance_or_iterable):
         """clear all object permissions of obj for instance(s)"""
-        if not hasattr(instance_or_iterable, '__iter__'):
-            instance_or_iterable = [instance_or_iterable]
+        instance_or_iterable = get_iterable_instances(instance_or_iterable)
         for instance in instance_or_iterable:
             object_permission = self._get_or_create_object_permission(instance)
             object_permission.permissions.clear()
@@ -119,8 +127,7 @@ class ObjectPermMediatorBase(object):
                                    authenticated users
             permissions          - codename list of permission
         """
-        if not hasattr(instance_or_iterable, '__iter__'):
-            instance_or_iterable = [instance_or_iterable]
+        instance_or_iterable = get_iterable_instances(instance_or_iterable)
         for instance in instance_or_iterable:
             object_permission = self._get_or_create_object_permission(instance)
             for perm in permissions:
@@ -139,8 +146,7 @@ class ObjectPermMediatorBase(object):
                                    authenticated users
             permissions          - codename list of permission
         """
-        if not hasattr(instance_or_iterable, '__iter__'):
-            instance_or_iterable = [instance_or_iterable]
+        instance_or_iterable = get_iterable_instances(instance_or_iterable)
         for instance in instance_or_iterable:
             object_permission = self._get_or_create_object_permission(instance)
             for perm in permissions:
