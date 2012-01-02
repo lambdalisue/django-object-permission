@@ -47,4 +47,5 @@ if isinstance(settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS, basestring):
             load_handler_class(settings.OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS)
 
 from base import ObjectPermHandlerBase
+from base import ObjectPermHandler
 from authenticated import AuthenticatedObjectPermHandler

@@ -27,9 +27,9 @@ __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.db.models.signals import post_save
 from django.db.models.signals import post_delete
 from django.contrib.auth.models import User
-from base import ObjectPermHandlerBase
+from base import ObjectPermHandler
 
-class AuthenticatedObjectPermHandler(ObjectPermHandlerBase):
+class AuthenticatedObjectPermHandler(ObjectPermHandler):
     """ObjectPermHandler for model
 
     This handler contribute..
@@ -39,28 +39,17 @@ class AuthenticatedObjectPermHandler(ObjectPermHandlerBase):
         3.  Viewer permission to anonymous user
 
     """
-    def __init__(self, model):
-        super(AuthenticatedObjectPermHandler, self).__init__(model)
-        # Register this instance to class
-        cls = self.__class__
-        if not hasattr(cls, '_instances'):
-            cls._instances = []
-        cls._instances.append(self)
-
-    def created(self):
+    def updated(self, attr):
         # staff user has full access
         staff_users = User.objects.filter(staff=True)
-        self.mediator.manager(staff_users.iterator())
+        self.manager(staff_users.iterator())
         # Authenticated user can edit
-        self.mediator.editor(None)
+        self.editor(None)
         # Anonymous user can view
-        self.mediator.viewer('anonymous')
+        self.viewer('anonymous')
 
 def _recall_updated_reciver(sender, instance, **kwargs):
     # Recall updated method of all AuthenticatedObjectPermHandler instance
-    instances = getattr(AuthenticatedObjectPermHandler, '_instances', [])
-    for instance in instances:
-        instance.mediator.reset()
-        instance.updated()
+    AuthenticatedObjectPermHandler.update()
 post_save.connect(_recall_updated_reciver, User)
 post_delete.connect(_recall_updated_reciver, User)

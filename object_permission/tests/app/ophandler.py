@@ -24,63 +24,36 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from observer import watch
 from object_permission import site
-from object_permission.handlers import ObjectPermHandlerBase
+from object_permission.handlers import ObjectPermHandler
 
 from models import Article
 
-class ArticleObjectPermHandler(ObjectPermHandlerBase):
-    def created(self):
+class ArticleObjectPermHandler(ObjectPermHandler):
+    def setup(self):
         # Watch related fields with observer
-        self._pub_state_watcher = watch(self.obj, 'pub_state', self._pub_state_updated)
-        self._author_watcher = watch(self.obj, 'author', self._author_updated)
-        self._inspectors_watcher = watch(self.obj, 'inspectors', self._inspectors_updated)
-        # Call updated
-        self.updated()
+        self.watch('pub_state')
+        self.watch('author')
+        self.watch('inspectors')
 
-    def updated(self):
-        # Reset all permissions for this object
-        self.mediator.reset()
+    def updated(self, attr):
         # Author has manager permission
-        self.mediator.manager(self.obj.author)
-        if self.obj.pub_state == 'draft':
+        self.manager(self.instance.author)
+        if self.instance.pub_state == 'draft':
             # No-one can view the object
-            self.mediator.reject(self.obj.inspectors)
-            self.mediator.reject(None)
-            self.mediator.reject('anonymous')
+            self.reject(self.instance.inspectors)
+            self.reject(None)
+            self.reject('anonymous')
         else:
             # Inspector has editor permission
-            self.mediator.editor(self.obj.inspectors)
+            self.editor(self.instance.inspectors)
             # Authenticated user has viewer permission
-            self.mediator.viewer(None)
-            if self.obj.pub_state == 'inspecting':
+            self.viewer(None)
+            if self.instance.pub_state == 'inspecting':
                 # Anonymous user has no permissions
-                self.mediator.reject('anonymous')
+                self.reject('anonymous')
             else:
                 # Article published
-                self.mediator.viewer('anonymous')
-
-    def deleted(self):
-        # Remove watchers
-        self._pub_state_watcher.unwatch()
-        self._author_watcher.unwatch()
-        self._inspectors_watcher.unwatch()
-
-    def _pub_state_updated(self, sender, obj, attr):
-        self.updated()
-
-    def _author_updated(self, sender, obj, attr):
-        # Reset object permissioin because to lazy to find previous author
-        # and remove the permission lol.
-        self.mediator.reset()
-        self.updated()
-
-    def _inspectors_updated(self, sender, obj, attr):
-        # Reset object permissioin because to lazy to find previous inspectors
-        # and remove the permission lol.
-        self.mediator.reset()
-        self.updated()
-
+                self.viewer('anonymous')
 # Register
 site.register(Article, ArticleObjectPermHandler)

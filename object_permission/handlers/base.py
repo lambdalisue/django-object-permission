@@ -27,44 +27,144 @@ __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.db.models.signals import post_save
 from django.db.models.signals import post_delete
 
+from observer import watch
+
 from ..mediators import ObjectPermMediator
-class ObjectPermHandlerBase(object):
-    """Base ObjectPermHandler"""
-    def __init__(self, model):
-        self.model = model
 
-    def bind(self):
-        """bind signals and recivers"""
-        post_save.connect(self._post_save_reciever, sender=self.model, weak=False)
-        post_delete.connect(self._post_delete_reciver, sender=self.model, weak=False)
-
-    def unbind(self):
-        """unbind signals and recivers."""
-        post_save.disconnect(self._post_save_reciever, sender=self.model)
-        post_delete.disconnect(self._post_delete_reciver, sender=self.model)
-
-    def _post_save_reciever(self, sender, instance, created, **kwargs):
-        self.obj = instance
-        self.mediator = ObjectPermMediator(self.obj)
-        if created:
-            self.created()
-        else:
-            self.updated()
-    def _post_delete_reciver(self, sender, instance, **kwargs):
-        self.obj = instance
-        self.mediator = ObjectPermMediator(self.obj)
-        self.deleted()
-
-
-    def created(self):
-        """called when object is created"""
-        pass
-
-    def updated(self):
-        """called when object is updated"""
-        pass
+class ObjectPermHandlerBase(ObjectPermMediator):
+    """Base class of ObjectPermHandler
     
-    def deleted(self):
-        """called when object is deleted"""
+    ObjectPermHandler is a subclass of ObjectPermMediator so the class has all
+    attributes/methods of the ObjectPermMediator
+
+    Bind the model class and ObjectPermHandler then automatically 'setup' and 
+    'teardown' method of the class is called when the instance of the model is
+    created/deleted.
+
+    watch attrs in 'setup' method then automatically 'updated' method is called
+    when the watched attr is updated.
+    """
+    def __init__(self, instance):
+        super(ObjectPermHandlerBase, self).__init__(instance)
+        self.model = instance.__class__
+
+    @classmethod
+    def bind(cls, model):
+        """bind model and this handler"""
+        post_save.connect(cls._post_save_reciever, sender=model, weak=False)
+        post_delete.connect(cls._post_delete_reciver, sender=model, weak=False)
+
+    @classmethod
+    def unbind(cls, model):
+        """unbind model and this handler"""
+        post_save.disconnect(cls._post_save_reciever, sender=model)
+        post_delete.disconnect(cls._post_delete_reciver, sender=model)
+
+    @classmethod
+    def _post_save_reciever(cls, sender, instance, created, **kwargs):
+        # register the instance to this class
+        if created:
+            cls._register(instance)
+
+    @classmethod
+    def _post_delete_reciver(cls, sender, instance, **kwargs):
+        # unregister the instance from this class
+        cls._unregister(instance)
+
+    @classmethod
+    def _register(cls, instance):
+        # create new handler instance
+        self = cls(instance)
+        # register the handler instance to cls
+        if not hasattr(cls, '_handlers'):
+            cls._handlers = {}
+        cls._handlers[instance] = self
+        # call pre setup method
+        self._setup()
+        # call pre updated method
+        self._updated(attr=None)
+
+    @classmethod
+    def _unregister(cls, instance):
+        # if no handler is registered, just ignore
+        if not hasattr(cls, '_handlers'):
+            return
+        self = cls._handlers[instance]
+        # call pre teardown method
+        self._teardown()
+        del cls._handlers[instance]
+
+    @classmethod
+    def update(cls):
+        """call 'updated' method of all instance of this class"""
+        if not hasattr(cls, '_handlers'):
+            return
+        for model, handler in cls._handlers:
+            handler._updated(attr=None)
+
+    def _setup(self):
+        raise NotImplementedError
+    def _teardown(self):
+        raise NotImplementedError
+    def _updated(self):
+        raise NotImplementedError
+
+class ObjectPermHandler(ObjectPermHandlerBase):
+    def __init__(self, instance):
+        super(ObjectPermHandler, self).__init__(instance)
+        self._watchers = {}
+
+    def _watch_update_reciver(self, sender, obj, attr):
+        # call pre updated method
+        self._updated(attr)
+
+    def _watch(self, instance, attr, callback):
+        """Watch instance attr and call callback and register the watcher"""
+        if instance not in self._watchers:
+            self._watchers[instance] = []
+        watcher = watch(instance, attr, callback)
+        self._watchers[instance].append(watcher)
+
+    def _unwatch(self, instance=None):
+        """Unwatch watchers of instance."""
+        if instance:
+            if instance in self._watchers:
+                del self._watchers[instance]
+        else:
+            # unwatch all watchers registered in this class instance
+            self._watchers = {}
+
+    def watch(self, attr, instance=None):
+        """Watch instance attr and call 'updated' method of this class"""
+        if instance is None:
+            instance = self.instance
+        self._watch(instance ,attr, self._watch_update_reciver)
+
+    def _setup(self):
+        """pre setup method"""
+        self.setup()
+
+    def _teardown(self):
+        """pre teardown method"""
+        # unwatch all watchers registered in this class instance
+        self._unwatch(instance=None)
+        self.teardown()
+
+    def _updated(self, attr):
+        """pre updated method"""
+        # reset object permission of the instance
+        self.reset()
+        # call updated method
+        self.updated(attr)
+
+    def setup(self):
+        """called when the bind model instance is created."""
         pass
 
+    def updated(self, attr):
+        """called when watched attr of the instance is updated"""
+        raise NotImplementedError
+
+    def teardown(self):
+        """called when the bind model instance is deleted."""
+        pass

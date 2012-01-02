@@ -52,9 +52,8 @@ class ObjectPermSite(object):
             if model in self._registry:
                 raise AlreadyRegistered('The mode %s is already registered' % model.__name__)
             
-            handler = handler_class(model)
-            handler.bind()
-            self._registry[model] = handler
+            handler_class.bind(model)
+            self._registry[model] = handler_class
 
     def unregister(self, model_or_iterable):
         """unregisters the given model(s).
@@ -66,7 +65,7 @@ class ObjectPermSite(object):
         for model in model_or_iterable:
             if model not in self._registry:
                 raise NotRegistered('The model %s is not registered' % model.__name__)
-            self._registry[model].unbind()
+            self._registry[model].unbind(model)
             del self._registry[model]
 
 site = ObjectPermSite()

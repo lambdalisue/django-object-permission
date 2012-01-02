@@ -51,16 +51,16 @@ def get_iterable_instances(instance_or_iterable):
 class ObjectPermMediatorBase(object):
     """Base Mediator for object-permission"""
 
-    def __init__(self, obj):
+    def __init__(self, instance):
         """constructor for ObjectPermMediator
 
         Attribute:
             obj - a target model instance of object permission
         """
-        if not isinstance(obj, Model):
-            raise AttributeError("'%s' is not an instance of model" % obj)
-        self._obj = obj
-        self._ct = ContentType.objects.get_for_model(obj)
+        if not isinstance(instance, Model):
+            raise AttributeError("'%s' is not an instance of model" % instance)
+        self.instance = instance
+        self._ct = ContentType.objects.get_for_model(instance)
 
     def _get_or_create_permission(self, perm):
         """get or create django permission instance"""
@@ -72,7 +72,7 @@ class ObjectPermMediatorBase(object):
                     codename=perm_codename)
         except Permission.DoesNotExist:
             # try to find/create permission with suffix
-            perm_codename = get_perm_codename_with_suffix(perm, self._obj)
+            perm_codename = get_perm_codename_with_suffix(perm, self.instance)
             permission = Permission.objects.get_or_create(
                     content_type=self._ct,
                     codename=perm_codename)[0]
@@ -100,13 +100,13 @@ class ObjectPermMediatorBase(object):
     def _get_or_create_object_permission(self, instance):
         """get or create object permission suite for instance"""
         model, kwargs = self._get_object_permission_cls(instance)
-        return model.objects.get_or_create_object_permission(self._obj, **kwargs)[0]
+        return model.objects.get_or_create_object_permission(self.instance, **kwargs)[0]
 
     def reset(self):
         """reset all permissions of obj"""
-        AnonymousObjectPermission.objects.get_for_model(self._obj).delete()
-        GroupObjectPermission.objects.get_for_model(self._obj).delete()
-        UserObjectPermission.objects.get_for_model(self._obj).delete()
+        AnonymousObjectPermission.objects.get_for_model(self.instance).delete()
+        GroupObjectPermission.objects.get_for_model(self.instance).delete()
+        UserObjectPermission.objects.get_for_model(self.instance).delete()
 
     def clear(self, instance_or_iterable):
         """clear all object permissions of obj for instance(s)"""

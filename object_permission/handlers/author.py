@@ -24,14 +24,9 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-try:
-    from observer import watch
-except ImportError:
-    raise ImportError("AuthorObjectPermHandler required 'django-observer' installed")
+from base import ObjectPermHandler
 
-from base import ObjectPermHandlerBase
-
-class AuthorObjectPermHandler(ObjectPermHandlerBase):
+class AuthorObjectPermHandler(ObjectPermHandler):
     """ObjectPermHandler for model which has author field
 
     This handler contribute..
@@ -44,36 +39,20 @@ class AuthorObjectPermHandler(ObjectPermHandlerBase):
     author_field = 'author'
     reject_anonymous = False
 
-    def unbind(self):
-        super(AuthorObjectPermHandler, self).unbind()
-        # Remove watcher
-        self._author_field_watcher.unwatch()
-
     def get_author(self):
-        return getattr(self.obj, self.author_field)
+        """get author field value"""
+        return getattr(self.instance, self.author_field)
 
-    def created(self):
-        # Watch author change
-        self._author_field_watcher = \
-                watch(self.obj, self.author_field, self._author_field_changed)
-        # Call updated method
-        self.updated()
+    def setup(self):
+        # watch author field
+        self.watch(self.author_field)
 
-    def updated(self):
+    def updated(self, attr):
         # Author has full access
-        self.mediator.manager(self.get_author())
+        self.manager(self.get_author())
         # Authenticated user can view
-        self.mediator.viewer(None)
+        self.viewer(None)
         if self.reject_anonymous:
-            self.mediator.reject('anonymous')
+            self.reject('anonymous')
         else:
-            self.mediator.viewer('anonymous')
-
-    def deleted(self):
-        # Remove watcher
-        self._author_field_watcher.unwatch()
-
-    def _author_field_changed(self, sender, instance, attr):
-        # reset all object permissions for obj
-        self.mediator.reset()
-        self.updated()
+            self.viewer('anonymous')

@@ -46,7 +46,7 @@ if "%s.backends.ObjectPermBackend" % app_label not in settings.AUTHENTICATION_BA
 # Set default settings
 set_default(
     'OBJECT_PERMISSION_DEFAULT_HANDLER_CLASS', 
-    'object_permission.handlers.authenticated.AuthenticatedObjectPermHandler')
+    'object_permission.handlers.base.ObjectPermHandler')
 set_default('OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS', ['view'])
 set_default('OBJECT_PERMISSION_BUILTIN_TEMPLATETAGS', True)
 set_default('OBJECT_PERMISSION_AUTODISCOVER', True)

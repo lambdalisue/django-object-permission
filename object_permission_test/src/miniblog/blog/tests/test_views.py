@@ -24,16 +24,12 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+from django.contrib.auth.models import User
 from django.test import TestCase
 from ..models import Entry
 
 class EntryViewTestCase(TestCase):
-    fixtures = ['test_user.yaml', 'test_entry.yaml']
-
-    def tearDown(self):
-        # This test (blog.entry) use watcher so remove all wathcher everytime
-        from observer import unwatch_all
-        unwatch_all()
+    fixtures = ['test.yaml']
 
     def test_list_get(self):
         response = self.client.get('/')
@@ -92,6 +88,12 @@ class EntryViewTestCase(TestCase):
         self.client.logout()
 
     def test_update_get(self):
+        # the entry author is foo
+        entry = Entry.objects.get(pk=2)
+        foo = User.objects.get(username='foo')
+        assert entry.author == foo
+        assert foo.has_perm('blog.change_entry', entry)
+
         # Anonymous user doesn't have change permission
         response = self.client.get('/update/2/')
         self.assertRedirects(response, '/accounts/login/?next=/update/2/')
@@ -118,6 +120,12 @@ class EntryViewTestCase(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_update_post(self):
+        # the entry author is foo
+        entry = Entry.objects.get(pk=2)
+        foo = User.objects.get(username='foo')
+        assert entry.author == foo
+        assert foo.has_perm('blog.change_entry', entry)
+
         # Anonymous user doesn't have change permission
         response = self.client.post('/update/2/', {
                 'title': 'foobar', 'body': 'foobar'
@@ -151,6 +159,12 @@ class EntryViewTestCase(TestCase):
         self.client.logout()
 
     def test_update_post_invalid(self):
+        # the entry author is foo
+        entry = Entry.objects.get(pk=2)
+        foo = User.objects.get(username='foo')
+        assert entry.author == foo
+        assert foo.has_perm('blog.change_entry', entry)
+
         assert self.client.login(username='foo', password='password')
         response = self.client.post('/update/2/', {
                 'title': '', 'body': ''
@@ -160,6 +174,12 @@ class EntryViewTestCase(TestCase):
         self.client.logout()
 
     def test_delete_get(self):
+        # the entry author is foo
+        entry = Entry.objects.get(pk=2)
+        foo = User.objects.get(username='foo')
+        assert entry.author == foo
+        assert foo.has_perm('blog.delete_entry', entry)
+
         # Anonymous user doesn't have delete permission
         response = self.client.get('/delete/2/')
         self.assertRedirects(response, '/accounts/login/?next=/delete/2/')
@@ -185,6 +205,12 @@ class EntryViewTestCase(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_delete_post(self):
+        # the entry author is foo
+        entry = Entry.objects.get(pk=2)
+        foo = User.objects.get(username='foo')
+        assert entry.author == foo
+        assert foo.has_perm('blog.delete_entry', entry)
+
         # Anonymous user doesn't have delete permission
         response = self.client.post('/delete/2/')
         self.assertRedirects(response, '/accounts/login/?next=/delete/2/')
