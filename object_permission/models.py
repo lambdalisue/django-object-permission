@@ -98,6 +98,9 @@ class GroupObjectPermission(BaseObjectPermission):
         unique_together     = ('content_type', 'object_id', 'group')
         verbose_name        = _('group object permission')
         verbose_name_plural = _('group object permissions')
+
+    def __unicode__(self):
+        return u"GroupObjectPermission of '%s' for '%s'" % (self.content_object, self.group)
         
 class AnonymousObjectPermissionManager(BaseObjectPermissionManager):
     def create_object_permission(self, obj):
@@ -118,6 +121,9 @@ class AnonymousObjectPermission(BaseObjectPermission):
         unique_together     = ('content_type', 'object_id')
         verbose_name        = _('anonymous object permission')
         verbose_name_plural = _('anonymous object permissions')
+
+    def __unicode__(self):
+        return u"AnonymousObjectPermission of '%s'" % self.content_object
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
     def _get_filter_kwargs(self, obj, user):
@@ -146,3 +152,6 @@ class UserObjectPermission(BaseObjectPermission):
         unique_together     = ('content_type', 'object_id', 'user')
         verbose_name        = _('user object permission')
         verbose_name_plural = _('user object permissions')
+
+    def __unicode__(self):
+        return u"UserObjectPermission of '%s' for '%s'" % (self.content_object, self.user)

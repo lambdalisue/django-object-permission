@@ -63,7 +63,7 @@ class ObjectPermHandlerBase(ObjectPermMediator):
     @classmethod
     def _post_save_reciever(cls, sender, instance, created, **kwargs):
         # register the instance to this class
-        if created:
+        if created or cls.get(instance) is None:
             cls._register(instance)
 
     @classmethod
@@ -95,11 +95,17 @@ class ObjectPermHandlerBase(ObjectPermMediator):
         del cls._handlers[instance]
 
     @classmethod
+    def get(cls, instance):
+        if not hasattr(cls, '_handlers'):
+            cls._handlers = {}
+        return cls._handlers.get(instance)
+
+    @classmethod
     def update(cls):
         """call 'updated' method of all instance of this class"""
         if not hasattr(cls, '_handlers'):
             return
-        for model, handler in cls._handlers:
+        for model, handler in cls._handlers.iteritems():
             handler._updated(attr=None)
 
     def _setup(self):
@@ -115,6 +121,8 @@ class ObjectPermHandler(ObjectPermHandlerBase):
         self._watchers = {}
 
     def _watch_update_reciver(self, sender, obj, attr):
+        # update instance (because self.instance is not fresh)
+        self.instance = obj
         # call pre updated method
         self._updated(attr)
 

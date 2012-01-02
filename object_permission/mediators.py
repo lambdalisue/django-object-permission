@@ -27,6 +27,7 @@ License:
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.db.models import Model
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -55,7 +56,7 @@ class ObjectPermMediatorBase(object):
         """constructor for ObjectPermMediator
 
         Attribute:
-            obj - a target model instance of object permission
+            instance - a target model instance of object permission
         """
         if not isinstance(instance, Model):
             raise AttributeError("'%s' is not an instance of model" % instance)
@@ -78,28 +79,28 @@ class ObjectPermMediatorBase(object):
                     codename=perm_codename)[0]
         return permission
 
-    def _get_object_permission_cls(self, instance):
-        """get object permission cls suite for instance"""
+    def _get_object_permission_cls(self, target):
+        """get object permission cls suite for target"""
         ANONYMOUS = 'anonymous'
-        if isinstance(instance, basestring) and instance == ANONYMOUS:
+        if isinstance(target, basestring) and target == ANONYMOUS:
             return AnonymousObjectPermission, {}
-        elif isinstance(instance, AnonymousUser):
+        elif isinstance(target, AnonymousUser):
             return AnonymousObjectPermission, {}
-        elif isinstance(instance, Group):
-            return GroupObjectPermission, {'group': instance}
-        elif instance is None or isinstance(instance, User) or isinstance(instance, basestring):
-            if isinstance(instance, basestring):
+        elif isinstance(target, Group):
+            return GroupObjectPermission, {'group': target}
+        elif target is None or isinstance(target, User) or isinstance(target, basestring):
+            if isinstance(target, basestring):
                 # Search from username
                 try:
-                    instance = User.objects.get(username=instance)
+                    target = User.objects.get(username=target)
                 except User.DoesNotExist:
-                    raise AttributeError("Unknown parameter '%s' is passed, you may mean '%s'?" % (instance, ANONYMOUS))
-            return UserObjectPermission, {'user': instance}
-        raise AttributeError("Unknown parameter '%s' is passed" % instance)
+                    raise AttributeError("Unknown parameter '%s' is passed, you may mean '%s'?" % (target, ANONYMOUS))
+            return UserObjectPermission, {'user': target}
+        raise AttributeError("Unknown parameter '%s' is passed" % target)
 
-    def _get_or_create_object_permission(self, instance):
+    def _get_or_create_object_permission(self, target):
         """get or create object permission suite for instance"""
-        model, kwargs = self._get_object_permission_cls(instance)
+        model, kwargs = self._get_object_permission_cls(target)
         return model.objects.get_or_create_object_permission(self.instance, **kwargs)[0]
 
     def reset(self):

@@ -55,21 +55,40 @@ Example mini blog app
     from object_permission import site
     # AuthorObjectPermHandler need 'django-observer' and required 'author'
     # field (the author field is automatically added by 'with_author' decorator)
-    from object_permission.handlers.author import AuthorObjectPermHandler
+    from object_permission.handlers import ObjectPermHandler
 
     from models import Entry
 
-    class EntryObjectPermHandler(AuthorObjectPermHandler):
-        """Add permission of obj...
+    class EntryObjectPermHandler(ObjectPermHandler):
+        """ObjectPermHandler for model which has author field
 
-        Author:
-            Full control (view, change, delete)
-        Authenticated user:
-            Can view (view)
-        Anonymous user:
-            Cannot view
+        This handler contribute..
+
+            1.  Manager permission to instance author
+            2.  Viewer permission to authenticated user
+            3.  Viewer permission to anonymous user if reject_anonymous is False
+
         """
-        reject_anonymous = True
+        author_field = 'author'
+        reject_anonymous = False
+
+        def get_author(self):
+            """get author field value"""
+            return getattr(self.instance, self.author_field)
+
+        def setup(self):
+            # watch author field
+            self.watch(self.author_field)
+
+        def updated(self, attr):
+            # Author has full access
+            self.manager(self.get_author())
+            # Authenticated user can view
+            self.viewer(None)
+            if self.reject_anonymous:
+                self.reject('anonymous')
+            else:
+                self.viewer('anonymous')
     # Register to object_permission site like django.contrib.admin
     site.register(Entry, EntryObjectPermHandler)
     
