@@ -29,10 +29,12 @@ from app_test import AppTestCase
 
 class ObjectPermissionTestCaseBase(AppTestCase):
     installed_apps = [
+            'author',
             'object_permission.tests.app',
         ]
     middleware_classes = [
             'object_permission.backends.ObjectPermBackend',
+            'author.middlewares.AuthorDefaultBackendMiddleware',
         ]
     def _pre_setup(self):
         self._original_middleware_classes = settings.MIDDLEWARE_CLASSES

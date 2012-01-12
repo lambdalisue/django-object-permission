@@ -28,10 +28,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AnonymousUser
 
 from base import ObjectPermissionTestCaseBase
-from app.models import Article
 
 class ArticleTestCase(ObjectPermissionTestCaseBase):
     def setUp(self):
+        from app.models import Article
         self.foo = User.objects.create_user(
                 username='foo',
                 email='foo@test.com',
