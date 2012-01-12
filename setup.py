@@ -6,7 +6,7 @@
 #
 from setuptools import setup, find_packages
 
-version = "0.4rc1"
+version = "0.4rc2"
 
 def read(filename):
     import os.path
