@@ -23,8 +23,11 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+import inspect
+
 from django.http import HttpRequest
 from django.http import HttpResponseForbidden
+from django.views.generic import View
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import SingleObjectMixin
 from django.contrib.auth.views import redirect_to_login
@@ -50,6 +53,14 @@ def permission_required(perm, queryset=None):
         queryset used with class method in Classbased generic view. Getting object
         from parameters of functional generic view might not work correctly sometime.
 
+    Note:
+        This decorator can decorate GenericView class as well. The following code works
+        correctly::
+
+            @permission_required('auth.add_user')
+            class SomeView(View):
+                pass
+
     Warning:
         DO NOT USE 'django.utils.decorators.method_decorator'. This decorator
         can be used either Classbased/Functional generic view without the 
@@ -57,7 +68,20 @@ def permission_required(perm, queryset=None):
 
     """
     def wrapper(fn):
-        def inner(self, request, *args, **kwargs):
+        def inner(*args, **kwargs):
+            args = list(args)
+            if 'self' in kwargs:
+                self = kwargs.pop('self')
+            elif len(args) > 0:
+                self = args.pop(0)
+            else:
+                self = None
+            if 'request' in kwargs:
+                request = kwargs.pop('request')
+            elif len(args) > 0:
+                request = args.pop(0)
+            else:
+                request = None
             if isinstance(self, HttpRequest):
                 # functional based generic view
                 if request is not None:
@@ -94,5 +118,12 @@ def permission_required(perm, queryset=None):
                 return fn(request, *args, **kwargs)
             else:
                 return fn(self, request, *args, **kwargs)
+        if inspect.isclass(fn):
+            # decorate class
+            cls = fn
+            dispatch = getattr(cls, 'dispatch')
+            dispatch = wrapper(dispatch)
+            setattr(cls, 'dispatch', dispatch)
+            return cls
         return inner
     return wrapper
