@@ -6,7 +6,7 @@
 #
 from setuptools import setup, find_packages
 
-version = "0.3rc1"
+version = "0.3rc2"
 
 def read(filename):
     import os.path
@@ -34,6 +34,7 @@ setup(
     zip_safe = True,
     install_requires=[
         'setuptools',
+        'setuptools-git',
         'django>=1.3',
         'django-observer>=0.3rc3',
         ],
