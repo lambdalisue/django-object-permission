@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf8:
 """
-short module explanation
+Run Django Test with Python setuptools test command
 
+
+REFERENCE:
+    http://gremu.net/blog/2010/enable-setuppy-test-your-django-apps/
 
 AUTHOR:
     lambdalisue[Ali su ae] (lambdalisue@hashnote.net)
@@ -24,18 +27,21 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
-from app_test import AppTestCase
+import os, sys
+os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
+test_dir = os.path.dirname(__file__)
+sys.path.insert(0, test_dir)
 
-class ObjectPermissionTestCaseBase(AppTestCase):
-    installed_apps = [
-            'author',
-            'object_permission.tests.app',
-        ]
-    middleware_classes = [
-            'author.middlewares.AuthorDefaultBackendMiddleware',
-        ]
+from django.test.utils import get_runner
+from django.conf import settings
 
-    def _pre_setup(self):
-        super(ObjectPermissionTestCaseBase, self)._pre_setup()
-        from .. import autodiscover
-        autodiscover()
+def runtests(verbosity=1, interactive=True):
+    """Run Django Test"""
+    TestRunner = get_runner(settings)
+    test_runner = TestRunner(verbosity=verbosity, interactive=interactive)
+    failures = test_runner.run_tests(['object_permission', 'blog'])
+    sys.exit(bool(failures))
+
+if __name__ == '__main__':
+    runtests()
+

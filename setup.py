@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Author:       Alisue
-# Last Change:  18-Mar-2011.
-#
+# vim: set fileencoding=utf8:
 from setuptools import setup, find_packages
 
 version = "0.4rc2"
@@ -19,7 +14,7 @@ setup(
     classifiers = [
         'Framework :: Django',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
     ],
@@ -28,14 +23,18 @@ setup(
     author_email = "lambdalisue@hashnote.net",
     url=r"https://github.com/lambdalisue/django-object-permission",
     download_url = r"https://github.com/lambdalisue/django-object-permission/tarball/master",
-    license = 'BSD',
+    license = 'MIT',
     packages = find_packages(),
-    include_package_data = False,
-    zip_safe = True,
+    include_package_data = True,
     install_requires=[
-        'setuptools',
+        'distribute',
         'setuptools-git',
-        'django>=1.3',
         'django-observer>=0.3rc3',
         ],
+    test_suite='tests.runtests.runtests',
+    tests_require=[
+        'django>=1.3',
+        'PyYAML',
+        'django-author',
+    ],
 )
