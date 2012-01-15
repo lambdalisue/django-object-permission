@@ -121,8 +121,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'tests.autocmd',
-    'tests.blog',
+    'tests.blogs',
     'author',
     'object_permission',
 )

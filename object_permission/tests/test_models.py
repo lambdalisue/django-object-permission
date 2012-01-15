@@ -27,36 +27,34 @@ __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AnonymousUser
 
-from base import ObjectPermissionTestCaseBase
+from app_testcase import AppTestCase
 
-class ArticleTestCase(ObjectPermissionTestCaseBase):
+class ArticleTestCase(AppTestCase):
+    fixtures = ['test.yaml']
+    installed_apps = [
+            'author',
+            'object_permission.tests.testapp',
+        ]
+    middleware_classes = [
+            'author.middlewares.AuthorDefaultBackendMiddleware',
+        ]
+
+    def _pre_setup(self):
+        super(ArticleTestCase, self)._pre_setup()
+        from .. import autodiscover
+        autodiscover()
+
     def setUp(self):
         from app.models import Article
-        self.foo = User.objects.create_user(
-                username='foo',
-                email='foo@test.com',
-                password='password')
-        self.foofoo = User.objects.create_user(
-                username='foofoo',
-                email='foofoo@test.com',
-                password='password')
-        self.foofoofoo = User.objects.create_user(
-                username='foofoofoo',
-                email='foofoofoo@test.com',
-                password='password')
-        self.bar = User.objects.create_user(
-                username='bar',
-                email='bar@test.com',
-                password='password')
-        self.barbar = User.objects.create_user(
-                username='barbar',
-                email='barbar@test.com',
-                password='password')
+        self.foo = User.objects.get(username='foo')
+        self.foofoo = User.objects.get(username='foofoo')
+        self.foofoofoo = User.objects.get(username='foofoofoo')
+        self.bar = User.objects.get(username='bar')
+        self.barbar = User.objects.get(username='barbar')
+        self.barbarbar = User.objects.get(username='barbarbar')
         self.hoge = AnonymousUser()
 
-        self.article = Article.objects.create(author=self.foo)
-        self.article.inspectors.add(self.foofoo, self.foofoofoo)
-        self.assertEqual(self.article.author, self.foo)
+        self.article = Article.objects.get(pk=1)
 
     def test_permissions_created(self):
         # pub_state = draft
