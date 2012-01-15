@@ -113,34 +113,28 @@ Example mini blog app
         model = Entry
         slug_field = 'title'
 
+        # decorate 'dispatch' method without method_decorator
         @permission_required('blog.view_entry')
         def dispatch(self, *args, **kwargs):
             return super(EntryDetailView, self).dispatch(*args, **kwargs)
 
+    # You can use the decorator as View class decorator
+    # Then automatically decorate 'dispatch' method of the View
+    @permission_required('blog.add_entry')
     class EntryCreateView(CreateView):
         form_class = EntryForm
         model = Entry
 
-        @permission_required('blog.add_entry')
-        def dispatch(self, *args, **kwargs):
-            return super(EntryCreateView, self).dispatch(*args, **kwargs)
-
+    @permission_required('blog.change_entry')
     class EntryUpdateView(UpdateView):
         form_class = EntryForm
         model = Entry
 
-        @permission_required('blog.change_entry')
-        def dispatch(self, *args, **kwargs):
-            return super(EntryUpdateView, self).dispatch(*args, **kwargs)
-
+    @permission_required('blog.delete_entry')
     class EntryDeleteView(DeleteView):
         model = Entry
         def get_success_url(self):
             return reverse('blog-entry-list')
-
-        @permission_required('blog.delete_entry')
-        def dispatch(self, *args, **kwargs):
-            return super(EntryDeleteView, self).dispatch(*args, **kwargs)
 
 ``index.html``::
 
@@ -200,6 +194,8 @@ Settings
     If this is True then all deprecated feature is loaded. You should not turnd on
     this unless your project is too large to do refactaring because deprecated feature 
     is no longer supported and limited.
+
+    will removed in version 0.5
 
 ``OBJECT_PERMISSION_MODIFY_FUNCTION`` (deprecated)
     set the name of function when object is saved for modify object permission for the object.

@@ -25,6 +25,7 @@ License:
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 from django.contrib.auth.models import AnonymousUser
 
 from app_testcase import AppTestCase
@@ -45,7 +46,7 @@ class ArticleTestCase(AppTestCase):
         autodiscover()
 
     def setUp(self):
-        from app.models import Article
+        from testapp.models import Article
         self.foo = User.objects.get(username='foo')
         self.foofoo = User.objects.get(username='foofoo')
         self.foofoofoo = User.objects.get(username='foofoofoo')
@@ -53,6 +54,9 @@ class ArticleTestCase(AppTestCase):
         self.barbar = User.objects.get(username='barbar')
         self.barbarbar = User.objects.get(username='barbarbar')
         self.hoge = AnonymousUser()
+
+        self.group1 = Group.objects.get(pk=1)
+        self.group2 = Group.objects.get(pk=2)
 
         self.article = Article.objects.get(pk=1)
 
@@ -62,14 +66,24 @@ class ArticleTestCase(AppTestCase):
         self.assert_(self.foo.has_perm('app.view_article', self.article))
         self.assert_(self.foo.has_perm('app.change_article', self.article))
         self.assert_(self.foo.has_perm('app.delete_article', self.article))
+        # Author group
+        self.assert_(self.foofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
         # Inspector
-        self.assert_(not self.foofoo.has_perm('app.view_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.change_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.delete_article', self.article))
-        # Authenticated user
         self.assert_(not self.bar.has_perm('app.view_article', self.article))
         self.assert_(not self.bar.has_perm('app.change_article', self.article))
         self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(not self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.delete_article', self.article))
         # Anonymous user
         self.assert_(not self.hoge.has_perm('app.view_article', self.article))
         self.assert_(not self.hoge.has_perm('app.change_article', self.article))
@@ -83,14 +97,24 @@ class ArticleTestCase(AppTestCase):
         self.assert_(self.foo.has_perm('app.view_article', self.article))
         self.assert_(self.foo.has_perm('app.change_article', self.article))
         self.assert_(self.foo.has_perm('app.delete_article', self.article))
-        # Inspector
+        # Author group
         self.assert_(self.foofoo.has_perm('app.view_article', self.article))
         self.assert_(self.foofoo.has_perm('app.change_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.delete_article', self.article))
-        # Authenticated user
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
+        # Inspector
         self.assert_(self.bar.has_perm('app.view_article', self.article))
-        self.assert_(not self.bar.has_perm('app.change_article', self.article))
+        self.assert_(self.bar.has_perm('app.change_article', self.article))
         self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(not self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.delete_article', self.article))
         # Anonymous user
         self.assert_(not self.hoge.has_perm('app.view_article', self.article))
         self.assert_(not self.hoge.has_perm('app.change_article', self.article))
@@ -103,14 +127,24 @@ class ArticleTestCase(AppTestCase):
         self.assert_(self.foo.has_perm('app.view_article', self.article))
         self.assert_(self.foo.has_perm('app.change_article', self.article))
         self.assert_(self.foo.has_perm('app.delete_article', self.article))
-        # Inspector
+        # Author group
         self.assert_(self.foofoo.has_perm('app.view_article', self.article))
         self.assert_(self.foofoo.has_perm('app.change_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.delete_article', self.article))
-        # Authenticated user
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
+        # Inspector
         self.assert_(self.bar.has_perm('app.view_article', self.article))
-        self.assert_(not self.bar.has_perm('app.change_article', self.article))
+        self.assert_(self.bar.has_perm('app.change_article', self.article))
         self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.delete_article', self.article))
         # Anonymous user
         self.assert_(self.hoge.has_perm('app.view_article', self.article))
         self.assert_(not self.hoge.has_perm('app.change_article', self.article))
@@ -123,14 +157,121 @@ class ArticleTestCase(AppTestCase):
         self.assert_(self.foo.has_perm('app.view_article', self.article))
         self.assert_(self.foo.has_perm('app.change_article', self.article))
         self.assert_(self.foo.has_perm('app.delete_article', self.article))
+        # Author group
+        self.assert_(self.foofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
         # Inspector
-        self.assert_(not self.foofoo.has_perm('app.view_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.change_article', self.article))
-        self.assert_(not self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(not self.bar.has_perm('app.view_article', self.article))
+        self.assert_(not self.bar.has_perm('app.change_article', self.article))
+        self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(not self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.delete_article', self.article))
+        # Anonymous user
+        self.assert_(not self.hoge.has_perm('app.view_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.change_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.delete_article', self.article))
+
+    def test_permission_watched_author_updated(self):
+        # pub_state = inspecting
+        self.article.pub_state = 'inspecting'
+        self.article.author = self.barbarbar
+        self.article.save()
+        # Author
+        self.assert_(self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.delete_article', self.article))
+        # Author group
+        self.assert_(self.foofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
+        # Inspector
+        self.assert_(self.bar.has_perm('app.view_article', self.article))
+        self.assert_(self.bar.has_perm('app.change_article', self.article))
+        self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(not self.foo.has_perm('app.view_article', self.article))
+        self.assert_(not self.foo.has_perm('app.change_article', self.article))
+        self.assert_(not self.foo.has_perm('app.delete_article', self.article))
+        # Anonymous user
+        self.assert_(not self.hoge.has_perm('app.view_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.change_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.delete_article', self.article))
+
+    def test_permission_watched_inspector_updated(self):
+        # pub_state = inspecting
+        self.article.pub_state = 'inspecting'
+        self.article.inspectors.clear()
+        self.article.inspectors.add(self.barbarbar)
+        self.article.save()
+        # Author
+        self.assert_(self.foo.has_perm('app.view_article', self.article))
+        self.assert_(self.foo.has_perm('app.change_article', self.article))
+        self.assert_(self.foo.has_perm('app.delete_article', self.article))
+        # Author group
+        self.assert_(self.foofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(self.foofoofoo.has_perm('app.delete_article', self.article))
+        # Inspector
+        self.assert_(self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbarbar.has_perm('app.delete_article', self.article))
         # Authenticated user
         self.assert_(not self.bar.has_perm('app.view_article', self.article))
         self.assert_(not self.bar.has_perm('app.change_article', self.article))
         self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(not self.barbar.has_perm('app.delete_article', self.article))
+        # Anonymous user
+        self.assert_(not self.hoge.has_perm('app.view_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.change_article', self.article))
+        self.assert_(not self.hoge.has_perm('app.delete_article', self.article))
+
+    def test_permission_watched_author_group_updated(self):
+        # pub_state = inspecting
+        self.article.pub_state = 'inspecting'
+        self.article.group = self.group2
+        self.article.save()
+        # Author
+        self.assert_(self.foo.has_perm('app.view_article', self.article))
+        self.assert_(self.foo.has_perm('app.change_article', self.article))
+        self.assert_(self.foo.has_perm('app.delete_article', self.article))
+        # Author group
+        self.assert_(self.barbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbar.has_perm('app.change_article', self.article))
+        self.assert_(self.barbar.has_perm('app.delete_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.view_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.change_article', self.article))
+        self.assert_(self.barbarbar.has_perm('app.delete_article', self.article))
+        # Inspector
+        self.assert_(self.bar.has_perm('app.view_article', self.article))
+        self.assert_(self.bar.has_perm('app.change_article', self.article))
+        self.assert_(not self.bar.has_perm('app.delete_article', self.article))
+        # Authenticated user
+        self.assert_(not self.foofoo.has_perm('app.view_article', self.article))
+        self.assert_(not self.foofoo.has_perm('app.change_article', self.article))
+        self.assert_(not self.foofoo.has_perm('app.delete_article', self.article))
+        self.assert_(not self.foofoofoo.has_perm('app.view_article', self.article))
+        self.assert_(not self.foofoofoo.has_perm('app.change_article', self.article))
+        self.assert_(not self.foofoofoo.has_perm('app.delete_article', self.article))
         # Anonymous user
         self.assert_(not self.hoge.has_perm('app.view_article', self.article))
         self.assert_(not self.hoge.has_perm('app.change_article', self.article))

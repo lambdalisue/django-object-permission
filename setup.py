@@ -31,7 +31,7 @@ setup(
         'distribute',
         'setuptools-git',
         'django-observer>=0.3rc3',
-        ],
+    ],
     test_suite='packageutils.runtests.runtests',
     tests_require=[
         'django>=1.3',

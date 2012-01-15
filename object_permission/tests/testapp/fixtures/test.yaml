@@ -1,0 +1,85 @@
+- model: auth.user
+  pk: 1
+  fields:
+    username: admin
+    email: admin@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: true
+    is_staff: true
+- model: auth.user
+  pk: 2
+  fields:
+    username: foo
+    email: foo@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+- model: auth.user
+  pk: 3
+  fields:
+    username: foofoo
+    email: foofoo@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+    groups: [1]
+- model: auth.user
+  pk: 4
+  fields:
+    username: foofoofoo
+    email: foofoofoo@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+    groups: [1]
+- model: auth.user
+  pk: 5
+  fields:
+    username: bar
+    email: bar@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+- model: auth.user
+  pk: 6
+  fields:
+    username: barbar
+    email: barbar@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+    groups: [2]
+- model: auth.user
+  pk: 7
+  fields:
+    username: barbarbar
+    email: barbarbar@test.com
+    password: sha1$588be$494b93325fbfd299a39691b4dddef29ac0ed3008
+    is_active: true
+    is_superuser: false
+    is_staff: false
+    groups: [2]
+
+- model: auth.group
+  pk: 1
+  fields:
+    name: Group1
+- model: auth.group
+  pk: 2
+  fields:
+    name: Group2
+
+- model: testapp.article
+  pk: 1
+  fields:
+    title: foo
+    body: foo
+    author: 2
+    inspectors: [5, 6]
+    group: 1
