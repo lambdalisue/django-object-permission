@@ -31,7 +31,7 @@ from django.contrib.auth.models import AnonymousUser
 from app_testcase import AppTestCase
 
 class ArticleTestCase(AppTestCase):
-    fixtures = ['test.yaml']
+    fixtures = ['object_permission_test.yaml']
     installed_apps = [
             'author',
             'object_permission.tests.testapp',
