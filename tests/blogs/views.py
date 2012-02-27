@@ -36,9 +36,14 @@ from object_permission.decorators import permission_required
 from models import Entry
 from forms import EntryForm
 
+class EntryFormMixin(object):
+    def get_form_kwargs(self):
+        kwargs = super(EntryFormMixin, self).get_form_kwargs()
+        kwargs.update({'request': self.request})
+        return kwargs
+
 class EntryListView(ListView):
     model = Entry
-
 
 @permission_required('blogs.view_entry')
 class EntryDetailView(DetailView):
@@ -46,12 +51,12 @@ class EntryDetailView(DetailView):
     slug_field = 'title'
 
 @permission_required('blogs.add_entry')
-class EntryCreateView(CreateView):
+class EntryCreateView(EntryFormMixin, CreateView):
     form_class = EntryForm
     model = Entry
 
 @permission_required('blogs.change_entry')
-class EntryUpdateView(UpdateView):
+class EntryUpdateView(EntryFormMixin, UpdateView):
     form_class = EntryForm
     model = Entry
 

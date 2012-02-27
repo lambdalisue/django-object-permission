@@ -50,7 +50,7 @@ class Entry(models.Model):
     updated_at = models.DateTimeField(_('date and time updated'),
             auto_now=True)
 
-    author = models.ForeignKey(_('author'))
+    author = models.ForeignKey(User, verbose_name=_('author'), editable=False)
 
     def __unicode__(self):
         return self.title

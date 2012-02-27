@@ -25,13 +25,20 @@ License:
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from ..models import Entry
 
 class EntryModelTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+                username='foo', email='foo@test.com',
+                password='foo'
+            )
+
     def test_creation(self):
         """blog.Entry: creation works correctly"""
-        entry = Entry(title='foo', body='bar')
+        entry = Entry(title='foo', body='bar', author=self.user)
         entry.full_clean()
         self.assertEqual(entry.title, 'foo')
         self.assertEqual(entry.body, 'bar')
@@ -43,7 +50,7 @@ class EntryModelTestCase(TestCase):
 
     def test_modification(self):
         """blog.Entry: modification works correctly"""
-        entry = Entry(title='foo', body='bar')
+        entry = Entry(title='foo', body='bar', author=self.user)
         entry.full_clean()
         entry.save()
 
@@ -58,7 +65,7 @@ class EntryModelTestCase(TestCase):
     def test_validation(self):
         """blog.Entry: validation works correctly"""
         from django.core.exceptions import ValidationError
-        entry = Entry(title='foo', body='bar')
+        entry = Entry(title='foo', body='bar', author=self.user)
         entry.full_clean()
         entry.save()
 
@@ -76,7 +83,7 @@ class EntryModelTestCase(TestCase):
 
     def test_deletion(self):
         """blog.Entry: deletion works correctly"""
-        entry = Entry(title='foo', body='bar')
+        entry = Entry(title='foo', body='bar', author=self.user)
         entry.full_clean()
         entry.save()
 

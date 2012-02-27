@@ -32,3 +32,11 @@ class EntryForm(forms.ModelForm):
     class Meta:
         model = Entry
         fields = ('title', 'body')
+
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
+        super(EntryForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        self.instance.author = self.request.user
+        return super(EntryForm, self).save(commit)

@@ -38,10 +38,13 @@ from django.conf import settings
 def runtests(verbosity=1, interactive=True):
     """Run Django Test"""
     TestRunner = get_runner(settings)
-    test_runner = TestRunner(verbosity=verbosity, interactive=interactive)
+    test_runner = TestRunner(
+            verbosity=verbosity,
+            interactive=interactive,
+            failfast=False,
+        )
     failures = test_runner.run_tests(['object_permission', 'blogs'])
     sys.exit(bool(failures))
 
 if __name__ == '__main__':
     runtests()
-
