@@ -33,11 +33,7 @@ from app_testcase import AppTestCase
 class ArticleTestCase(AppTestCase):
     fixtures = ['object_permission_test.yaml']
     installed_apps = [
-            'author',
             'object_permission.tests.testapp',
-        ]
-    middleware_classes = [
-            'author.middlewares.AuthorDefaultBackendMiddleware',
         ]
 
     def _pre_setup(self):

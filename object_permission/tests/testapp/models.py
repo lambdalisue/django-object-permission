@@ -28,9 +28,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 
-from author.decorators import with_author
-
-@with_author
 class Article(models.Model):
     PUB_STATES = (
             ('draft',   'draft'),
@@ -47,6 +44,8 @@ class Article(models.Model):
     inspectors = models.ManyToManyField(User, related_name='inspected_articles')
     
     group = models.ForeignKey(Group, related_name='articles', blank=True, null=True)
+
+    author = models.ForeignKey(User, related_name='articles')
 
     def __unicode__(self):
         return self.title

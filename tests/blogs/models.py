@@ -24,11 +24,9 @@ License:
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
 __VERSION__ = "0.1.0"
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils.text import ugettext_lazy as _
 
-from author.decorators import with_author
-
-@with_author
 class Entry(models.Model):
     """mini blog entry model
     
@@ -52,6 +50,8 @@ class Entry(models.Model):
     updated_at = models.DateTimeField(_('date and time updated'),
             auto_now=True)
 
+    author = models.ForeignKey(_('author'))
+
     def __unicode__(self):
         return self.title
 
@@ -68,7 +68,6 @@ class Entry(models.Model):
 
 from django.conf import settings
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 def _is_in_test_at_loggerheads():

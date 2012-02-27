@@ -60,4 +60,3 @@ class EntryDeleteView(DeleteView):
     model = Entry
     def get_success_url(self):
         return reverse('blogs-entry-list')
-

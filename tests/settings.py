@@ -122,7 +122,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'tests.blogs',
-    'author',
     'object_permission',
 )
 

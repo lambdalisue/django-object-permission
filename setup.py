@@ -30,12 +30,11 @@ setup(
     install_requires=[
         'distribute',
         'setuptools-git',
+        'django>=1.3',
         'django-observer>=0.3rc3',
     ],
     test_suite='packageutils.runtests.runtests',
     tests_require=[
-        'django>=1.3',
         'PyYAML',
-        'django-author',
     ],
 )
