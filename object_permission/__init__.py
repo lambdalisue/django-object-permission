@@ -51,7 +51,6 @@ set_default('OBJECT_PERMISSION_EXTRA_DEFAULT_PERMISSIONS', ['view'])
 set_default('OBJECT_PERMISSION_BUILTIN_TEMPLATETAGS', True)
 set_default('OBJECT_PERMISSION_AUTODISCOVER', True)
 set_default('OBJECT_PERMISSION_HANDLER_MODULE_NAME', 'ophandler')
-set_default('OBJECT_PERMISSION_DEPRECATED', False)
 
 # Load site (this must be after the default settings has complete)
 from sites import site
@@ -116,12 +115,3 @@ def autodiscover():
                 raise
 if settings.OBJECT_PERMISSION_AUTODISCOVER:
     autodiscover()
-
-if settings.OBJECT_PERMISSION_DEPRECATED:
-    import warnings
-    warnings.warn('deperecated future turnd on. you should turn off it with "OBJECT_PERMISSION_DEPRECATED"', DeprecationWarning)
-    from deprecated.modify_object_permission import *
-    from deprecated.mediators import ObjectPermissionMediator
-    from deprecated.utils import generic_permission_check
-    import utils
-    utils.generic_permission_check = generic_permission_check
