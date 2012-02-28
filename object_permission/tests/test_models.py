@@ -24,24 +24,20 @@ License:
     limitations under the License.
 """
 __AUTHOR__ = "lambdalisue (lambdalisue@hashnote.net)"
+from django.test import TestCase
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import AnonymousUser
 
-from app_testcase import AppTestCase
+from override_settings import with_apps
 
-class ArticleTestCase(AppTestCase):
+@with_apps('object_permission.tests.testapp')
+class ArticleTestCase(TestCase):
     fixtures = ['object_permission_test.yaml']
-    installed_apps = [
-            'object_permission.tests.testapp',
-        ]
-
-    def _pre_setup(self):
-        super(ArticleTestCase, self)._pre_setup()
-        from .. import autodiscover
-        autodiscover()
 
     def setUp(self):
+        from .. import autodiscover
+        autodiscover()
         from testapp.models import Article
         self.foo = User.objects.get(username='foo')
         self.foofoo = User.objects.get(username='foofoo')
