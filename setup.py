@@ -25,7 +25,8 @@ setup(
     download_url = r"https://github.com/lambdalisue/django-object-permission/tarball/master",
     license = 'MIT',
     packages = find_packages(),
-    include_package_data = True,
+    include_package_data=True,
+    zip_safe=False,
     install_requires=[
         'distribute',
         'setuptools-git',
