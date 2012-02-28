@@ -105,6 +105,8 @@ def permission_required(perm, queryset=None):
             else:
                 # classbased generic view
                 if not isinstance(self, CreateView) and isinstance(self, SingleObjectMixin):
+                    if not hasattr(self, 'request'):
+                        self.request = request
                     self.kwargs = kwargs
                     obj = self.get_object(queryset)
                 else:
