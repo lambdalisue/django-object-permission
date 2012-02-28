@@ -1,7 +1,7 @@
 # vim: set fileencoding=utf8:
 from setuptools import setup, find_packages
 
-version = '0.5.0'
+version = '0.5.1'
 
 def read(filename):
     import os.path
@@ -25,7 +25,8 @@ setup(
     download_url = r"https://github.com/lambdalisue/django-object-permission/tarball/master",
     license = 'MIT',
     packages = find_packages(),
-    include_package_data = True,
+    include_package_data=True,
+    zip_safe=False,
     install_requires=[
         'distribute',
         'setuptools-git',
