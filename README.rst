@@ -1,6 +1,6 @@
 ``django-object-permissiono`` apply object permission feature to Django models
 
-**This library is deprecated. See `django-permission <http://github.com/lambdalisue/django-permission>`_ insted.**
+**This library is deprecated**. See `django-permission <http://github.com/lambdalisue/django-permission>`_ insted.
 
 .. Note::
    I stop developing this library because You have to re-save all models which may give a permissions to newly created user
